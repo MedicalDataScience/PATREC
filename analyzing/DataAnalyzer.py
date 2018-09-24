@@ -2,8 +2,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from analyzing.Dataset import Dataset
-
 from helpers.helpers import getFeatureCategories
 
 class DataAnalyzer:

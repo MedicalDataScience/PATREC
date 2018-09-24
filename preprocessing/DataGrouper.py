@@ -12,7 +12,8 @@ from helpers.helpers import getOEgrouping
 
 class DataGrouper:
 
-    def __init__(self, dir_data, dataset, grouping, subgroup_names=None, chunksize=10000):
+    def __init__(self, options_dataset):
+        self.options = options_dataset;
         self.dir_data = dir_data
         self.dataset = dataset
         self.filename_options_in = 'clean';

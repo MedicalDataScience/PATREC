@@ -188,6 +188,11 @@ def getCountFeaturesToBinarize():
     return features.copy();
 
 
+def getNumericalFeatures():
+    features = NUMERICAL;
+    return features.copy();
+
+
 def getAdminFeaturesNames():
     return ADMIN_FEATURES_NAMES.copy();
 

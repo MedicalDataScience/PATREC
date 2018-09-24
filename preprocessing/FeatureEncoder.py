@@ -29,10 +29,9 @@ from helpers.helpers import getAgeState
 #   methods, the encoding has to be done beforehands --> here :)
 class FeatureEncoder:
 
-    def __init__(self, dir_data, dataset, filename_options_in):
-        self.dir_data = dir_data;
-        self.dataset = dataset;
-        self.filename_options_in = filename_options_in;
+    def __init__(self, options_dataset):
+        self.options = options_dataset;
+        self.filename_options_in = self.options.getFeatureSet();
         return;
 
     def __prepareHauptdiagnose(self, valStr):
@@ -161,16 +160,18 @@ class FeatureEncoder:
         return df;
 
 
-    def encodeFeatures(self, encoding):
-
+    def encodeFeatures(self):
+        encoding = self.options.getEncodingScheme();
         assert(encoding is not None, 'an encoding algorithm has to be selected..exit');
         assert(encoding in ['categorical', 'binary', 'embedding'], 'feature encoding scheme is not known...please select one of the following: categorical, binary, embedding');
 
+        dir_data = self.options.getDirData();
+        dataset = self.options.getDatasetName();
         print('encode features: ' + str(encoding))
-        strFilename_in = self.dataset + '_REST_' + self.filename_options_in;
+        strFilename_in = dataset + '_REST_' + self.filename_options_in;
         strFilename_out = strFilename_in + '_' + encoding;
-        filename_data_in = self.dir_data + 'data_' + strFilename_in + '.csv';
-        filename_data_out = self.dir_data + 'data_' + strFilename_out + '.csv';
+        filename_data_in = dir_data + 'data_' + strFilename_in + '.csv';
+        filename_data_out = dir_data + 'data_' + strFilename_out + '.csv';
 
         df = pd.read_csv(filename_data_in);
         df = self.__preprocessFeatureEncoding(df);

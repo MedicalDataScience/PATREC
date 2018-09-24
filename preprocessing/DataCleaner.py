@@ -8,12 +8,15 @@ from helpers.helpers import convertDate
 
 class DataCleaner:
 
-    def __init__(self, dir_data, dataset, filename_options_in, filename_options_out, chunksize=10000):
-        self.chunksize = chunksize
-        self.dir_data = dir_data
+    def __init__(self, options_dataset, filename_options_in, filename_options_out):
+        self.options = options_dataset;
+        self.chunksize = self.options.getChunksize();
+        self.dir_data = self.options.getDirData();
         self.filename_options_in = filename_options_in;
         self.filename_options_out = filename_options_out;
-        self.dataset = dataset;
+        self.dataset = self.options.getDatasetName();
+        self.subgroups = self.options.getSubgroups();
+
 
     def __filterColumns(self, df, column_name, column_value):
         print('before: ' + str(df.shape))
@@ -160,7 +163,7 @@ class DataCleaner:
         return df_clean;
 
 
-    def cleanData(self, subgroup_names):
+    def cleanData(self):
         if self.filename_options_in is not None:
             strFilenameIn = self.dataset + '_REST' + '_' + self.filename_options_in;
         else:
@@ -196,7 +199,7 @@ class DataCleaner:
         clean_df.to_csv(filename_data_out_clean, mode='w', index=False, line_terminator='\n');
         cases_clean = clean_df['Fall'].values;
 
-        for g in subgroup_names:
+        for g in self.subgroups:
             print('subgroup: ' + str(g))
             strFilenameIn = self.dataset + '_' + g;
             strFilenameOut = self.dataset + '_' + g + '_' + self.filename_options_out;

@@ -2,7 +2,7 @@
 import os
 
 from analyzing.DataAnalyzer import DataAnalyzer
-from analyzing.Dataset import Dataset
+from utils.Dataset import Dataset
 from utils.DatasetOptions import DatasetOptions
 
 dirProject = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/';

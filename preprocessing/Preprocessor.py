@@ -1,13 +1,9 @@
-import os
-import sys
 from preprocessing.ColumnSplitter import ColumnSplitter
 from preprocessing.DataCleaner import DataCleaner
 from preprocessing.DataPreparer import DataPreparer
 from preprocessing.DataGrouper import DataGrouper
-from preprocessing.DataSplitter import DataSplitter
 from preprocessing.FeatureEncoder import FeatureEncoder
 from preprocessing.FeatureSetCreator import FeatureSetCreator
-from preprocessing.DataFilter import DataFilter
 
 
 # Still Missing/ TODO:
@@ -26,79 +22,42 @@ from preprocessing.DataFilter import DataFilter
 
 class Preprocessor():
 
-    def __init__(self, options_preprocessing):
-        self.filename_data_1 = '/scicore/home/vogtju/GROUP/PATREC_USB/PR15_2012-15___Anonym18Konsent.csv';
-        self.filename_data_2 = '/scicore/home/vogtju/GROUP/PATREC_USB/PR15_2016-17___Anonym18Konsent.csv';
-        self.DIR_PROJECT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) + '/';
-        self.dir_data = self.DIR_PROJECT + 'data/';
-
-        self.dataset = options_preprocessing['dataset'];
-        self.chunksize = options_preprocessing['chunksize'];
-        self.subgroup_names = options_preprocessing['subgroups'];
-
-        self.featureset = options_preprocessing['featureset'];
-        self.featureset_options = options_preprocessing['options_featureset'];
-        self.encoding = options_preprocessing['encoding'];
-        self.grouping = options_preprocessing['grouping'];
-
-        if self.dataset == '20122015':
-            self.filename_raw = self.filename_data_1;
-        elif self.dataset == '20162017':
-            self.filename_raw = self.filename_data_2;
-        else:
-            print('dataset is unknown... exit')
-            sys.exit();
+    def __init__(self, options_dataset):
+        self.options = options_dataset;
         return;
 
 
     def splitColumns(self):
-        splitter = ColumnSplitter(self.filename_raw, self.chunksize);
-        for g in self.subgroup_names:
-            filename_out = self.dir_data + 'data_' + self.dataset + '_' + g + '.csv';
-            splitter.splitColumns(g, filename_out);
-
-        filename_out_rest = self.dir_data + 'data_' + self.dataset + '_REST.csv';
-        splitter.splitColumns('REST', filename_out_rest);
+        splitter = ColumnSplitter(self.options);
+        splitter.splitColumnsAllSubgroups();
 
 
-    def clean(self, filename_options_in=None, filename_options_out='clean'):
-        cleaner = DataCleaner(self.dir_data, self.dataset, filename_options_in, filename_options_out)
-        cleaner.cleanData(self.subgroup_names)
+    def clean(self):
+        filename_options_in = None
+        filename_options_out = 'clean'
+        cleaner = DataCleaner(self.options, filename_options_in, filename_options_out)
+        cleaner.cleanData()
 
 
     def group(self):
-        grouper = DataGrouper(self.dir_data, self.dataset, self.grouping, self.subgroup_names);
+        grouper = DataGrouper(self.options);
         grouper.groupFeatures()
 
 
     def createFeatureSet(self):
-        featureset_creator = FeatureSetCreator(self.dir_data, self.dataset);
-        featureset_creator.createFeatureSet(self.featureset, self.featureset_options);
+        featureset_creator = FeatureSetCreator(self.options);
+        featureset_creator.createFeatureSet();
 
 
     def encodeFeatures(self):
-        filename_options_in = self.featureset;
-        encoder = FeatureEncoder(self.dir_data, self.dataset, filename_options_in);
-        encoder.encodeFeatures(self.encoding);
+        encoder = FeatureEncoder(self.options);
+        encoder.encodeFeatures();
 
 
     def fuse(self):
-        filename_options_in = self.featureset + '_' + self.encoding;
-        filename_options_out = self.featureset + '_' + self.encoding + '_' + self.grouping;
-        preparer = DataPreparer(self.dir_data, self.dataset, filename_options_in, filename_options_out, self.grouping);
-        preparer.fuseSubgroups(self.subgroup_names, self.encoding, self.featureset, self.featureset_options);
+        preparer = DataPreparer(self.options);
+        preparer.fuseSubgroups();
 
-
-    def filterData(self, filterKey):
-        filename_options_in = self.featureset + '_' + self.encoding + '_' + self.grouping;
-        filter = DataFilter(self.dir_data, self.dataset, filename_options_in)
-        filter.filterDataBinaryColumns(filterKey)
-
-
-    def splitDatasetIntoTrainingTestingSet(self):
-        filename_options_in = self.featureset + '_' + self.encoding + '_' + self.grouping;
-        datasplitter = DataSplitter(self.dir_data, self.dataset, filename_options_in)
-        datasplitter.splitDatasetIntoTrainingTesting();
 
 
 

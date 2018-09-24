@@ -1,6 +1,12 @@
+import os
 
-
+from utils.DatasetOptions import DatasetOptions
 from preprocessing.Preprocessor import Preprocessor
+
+
+dirProject = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/';
+dirData = dirProject + 'data/';
+
 
 new_features = ['previous_visits', 'ratio_los_age', 'ratio_numDK_age', 'ratio_los_numDK', 'ratio_numCHOP_age',
                 'ratio_los_numOE', 'ratio_numOE_age', 'mult_los_numCHOP', 'mult_equalOE_numDK',
@@ -10,22 +16,27 @@ new_features = ['previous_visits', 'ratio_los_age', 'ratio_numDK_age', 'ratio_lo
 
 # new_features = ['rel_diff_drg_alos', 'rel_diff_drg_lowerbound', 'rel_diff_drg_upperbound']
 options_standard = None;
-options_newfeatures = {'subgroups': ['CHOP', 'DK', 'OE'], 'names_new_features': new_features};
+options_newfeatures = {'names_new_features': new_features};
 options_reduction = {'reduction_method': 'NOADMIN'};
 
-options_preprocessing = {
-    'dataset':              '20122015',
-    'subgroups':            ['OE', 'DK', 'CHOP'],
-    'featureset':           'newfeatures',
-    'options_featureset':   options_newfeatures,
-    'encoding':             'categorical',
-    'grouping':             'grouping',
-    'options_grouping':     None,
-    'chunksize':            10000,
+
+dict_dataset_options = {
+    'dir_data':                 dirData,
+    'dataset':                  '20122015',
+    'subgroups':                ['OE', 'DK', 'CHOP'],
+    'featureset':               'newfeatures',
+    'options_featureset':       options_newfeatures,
+    'grouping':                 'grouping',
+    'options_grouping':         None,
+    'encoding':                 'categorical',
+    'options_encoding':         None,
+    'options_filtering':        None,
+    'chunksize':                10000,
+    'ratio_training_samples':   0.85,
 }
 
-
-preproc = Preprocessor(options_preprocessing);
+options = DatasetOptions(dict_dataset_options);
+preproc = Preprocessor(options);
 # preproc.splitColumns();
 # preproc.clean()
 # preproc.group(filename_options_out='grouping')      #, names_newfeatures=['numCHOP', 'numDK', 'numOE']
@@ -40,7 +51,7 @@ preproc = Preprocessor(options_preprocessing);
 
 # preproc.splitDatasetIntoTrainingTestingSet(filename_options_in='embedding_grouping')
 
-# preproc.createFeatureSet()
-# preproc.encodeFeatures();
-# preproc.fuse();
-preproc.filterData('Hauptdiagnose_I2');
+preproc.createFeatureSet()
+preproc.encodeFeatures();
+preproc.fuse();
+#preproc.filterData('Hauptdiagnose_I2');

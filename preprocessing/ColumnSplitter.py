@@ -6,9 +6,11 @@ from helpers.constants import IGNORE_HEADERS
 
 class ColumnSplitter:
 
-    def __init__(self, filename_src, chunksize):
-        self.chunksize = chunksize
-        self.filename_data_src = filename_src;
+
+    def __init__(self, options_dataset):
+        self.options = options_dataset;
+        self.chunksize = self.options.getChunksize();
+        self.filename_data_src = self.options.getFilenameRawData(),
         self.headers_all_columns = self.__getHeadersAll();
         return;
 
@@ -101,3 +103,15 @@ class ColumnSplitter:
                 chunk.to_csv(filename_data_out, mode='w', index=False, line_terminator='\n',header=headers_subgroup_columns);
             else:
                 chunk.to_csv(filename_data_out, mode='a', index=False, line_terminaror='\n', header=False);
+
+    def splitColumnsAllSubgroups(self):
+        dir_data = self.options.getDirData();
+        dataset = self.options.getDatasetName();
+        for g in self.options.getSubGroups():
+            filename_out = dir_data + 'data_' + dataset + '_' + g + '.csv';
+            self._splitColumnsSubgroup(g, filename_out);
+        filename_out_rest = dir_data + 'data_' + dataset + '_REST.csv';
+        self.splitColumns('REST', filename_out_rest);
+
+
+

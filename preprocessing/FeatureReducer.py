@@ -6,11 +6,9 @@ from helpers.helpers import getAdminFeaturesNames
 
 class FeatureReducer:
 
-    def __init__(self, dir_data, dataset, filename_options_in, filename_options_out):
-        self.dir_data = dir_data;
-        self.dataset = dataset;
+    def __init__(self, options_dataset, filename_options_in):
+        self.options = options_dataset;
         self.filename_options_in = filename_options_in;
-        self.filename_options_out = filename_options_out;
         return;
 
 
@@ -18,8 +16,12 @@ class FeatureReducer:
         if self.filename_options_in is None:
             print('filename options must not be None: ')
             print('filename_options_in: '  + str(self.filename_options_in))
-        strFilenameIn = self.dataset + '_REST_' + self.filename_options_in;
-        strFilenameOut = self.dataset + '_REST_' + self.filename_options_out;
+
+        dataset = self.options.getDatasetName();
+        reduction_method = self.options.getFeatureSetOptions()['reduction_method'];
+        filename_options_out = 'reduction' + reduction_method;
+        strFilenameIn = dataset + '_REST_' + self.filename_options_in;
+        strFilenameOut = dataset + '_REST_' + filename_options_out;
         return [strFilenameIn, strFilenameOut]
 
 
@@ -45,18 +47,19 @@ class FeatureReducer:
         return df;
 
 
-    def reduceFeatures(self, name_reduction=None):
-        print('reduction method: ' + str(name_reduction))
-        if name_reduction is not None:
+    def reduceFeatures(self):
+        dir_data = self.options.getDirData();
+        reduction_method = self.options.getFeatureSetOptions()['reduction_method'];
+        print('reduction method: ' + str(reduction_method))
+        if reduction_method is not None:
             [filename_str_in, filename_str_out] = self.__getFilenameOptionsStr();
-            filename_data_in = self.dir_data + 'data_' + filename_str_in + '.csv';
-            filename_data_out = self.dir_data + 'data_' + filename_str_out + '.csv';
-
+            filename_data_in = dir_data + 'data_' + filename_str_in + '.csv';
+            filename_data_out = dir_data + 'data_' + filename_str_out + '.csv';
             df = pd.read_csv(filename_data_in);
 
-            if name_reduction == 'NOADMIN':
+            if reduction_method == 'NOADMIN':
                 df_reduced = self.__removeAdminFeatures(df);
-            elif name_reduction == 'ONLYADMIN':
+            elif reduction_method == 'ONLYADMIN':
                 df_reduced = self.__removeAllButAdminFeatures(df);
             else:
                 print('feature reduction algorithm is not known/implemented yet...exit')

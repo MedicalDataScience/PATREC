@@ -10,39 +10,32 @@ from preprocessing.FeatureReducer import FeatureReducer
 
 class FeatureSetCreator:
     # create the feature set of the REST columns
-    def __init__(self, dir_data, dataset):
-        self.dir_data = dir_data;
-        self.dataset = dataset;
+    def __init__(self, options_dataset):
+        self.options = options_dataset;
         self.filename_options_in = 'clean';
         return;
 
-    def createFeatureSet(self, name, options):
+    def createFeatureSet(self):
+        dir_data = self.options.getDirData();
+        dataset = self.options.getDatasetName();
+        name = self.options.getFeatureSet();
+        featureset_options = self.options.getFeatureSetOptions();
+        subgroups = self.options.getSubgroups();
 
         if name == 'standard':
-            filename_data_in = self.dir_data + 'data_' + self.dataset + '_REST_' + self.filename_options_in + '.csv';
-            filename_data_out = self.dir_data + 'data_' + self.dataset + '_REST_' + name + '.csv';
+            filename_data_in = dir_data + 'data_' + dataset + '_REST_' + self.filename_options_in + '.csv';
+            filename_data_out = dir_data + 'data_' + dataset + '_REST_' + name + '.csv';
             copy2(filename_data_in, filename_data_out);
         elif name == 'newfeatures':
-            assert options['subgroups'] is not None, 'subgroups are needed to create new features...exit'
-            assert options['names_new_features'] is not None, 'names new features cannot be None when choosing this featureset...exit'
-
-            subgroups = options['subgroups']
-            names_new_features = options['names_new_features'];
-
-            if len(names_new_features) == 0:
-                print('WARNING: empty list of names for new features...');
+            assert subgroups is not None, 'subgroups are needed to create new features...exit'
             filename_options_out = 'newfeatures';
-            creator = FeatureCreator(self.dir_data, self.dataset, self.filename_options_in, filename_options_out, subgroups, names_new_features)
+            creator = FeatureCreator(self.options, self.filename_options_in, filename_options_out)
             creator.addFeatures();
-        # add features
-        # fuse columns
         elif name == 'reduction':
         # reduce features
-            assert options['reduction_method'] is not None, 'there has to be a feature reduction method for this choice of feature set...exit';
-            reduction_method = options['reduction_method'];
-            filename_options_out = 'reduction' + reduction_method;
-            reducer = FeatureReducer(self.dir_data, self.dataset, self.filename_options_in, filename_options_out);
-            reducer.reduceFeatures(reduction_method);
+            assert featureset_options['reduction_method'] is not None, 'there has to be a feature reduction method for this choice of feature set...exit';
+            reducer = FeatureReducer(self.options, self.filename_options_in);
+            reducer.reduceFeatures();
         else:
             print('name of feature set is not known: ' + str(name))
             print('..exit!');
