@@ -1,5 +1,6 @@
-
+import os
 import numpy as np
+
 
 class ResultsSingleRun:
     def __init__(self):
@@ -49,28 +50,150 @@ class ResultsSingleRun:
         return;
 
 
-    def readResults(self):
-        return;
+    def getPrecision(self):
+        return self.precision;
 
-    def writeResults(self):
-        return;
+    def getRecall(self):
+        return self.recall;
 
+    def getThresholdsPrecisionRecall(self):
+        return self.thresholds_precision_recall;
+
+    def getFMeasure(self):
+        return self.fmeasure;
+
+    def getAvgPrecision(self):
+        return self.average_precision;
+
+    def getTPR(self):
+        return self.tpr;
+
+    def getFPR(self):
+        return self.fpr;
+
+    def getThresholdsTprFpr(self):
+        return self.thresholds_tpr_fpr;
 
     def getAUC(self):
         return self.roc_auc;
 
 
 class Results:
-    def __init__(self, dataset_options, classifier_options):
-        self.dataset_options = dataset_options;
+    def __init__(self, dir_results, dataset_options_training, dataset_options_testing, classifier_options, results_type):
+        self.training_dataset_options = dataset_options_training;
+        self.testing_dataset_options = dataset_options_testing;
         self.classifier_options = classifier_options;
+
         self.results_all_runs = [];
 
+        self.results_type = results_type;
+        self.dir_results = self._getDirResults(dir_results);
+        self.filename_options = self._getStrFilenameResults();
 
-    def setResultsSingleRun(self, res):
-        results_single_run = ResultsSingleRun();
-        results_single_run.setMetrics(res);
-        self.results_all_runs.append(results_single_run);
+
+    def _getStrFilenameResults(self):
+        strFilenameDatasetTraining = self.training_dataset_options.getFilenameOptions();
+        strFilenameDatasetTesting = self.testing_dataset_options.getFilenameOptions();
+        strFilenameClassifier = self.classifier_options.getFilenameOptions();
+        strFilenameResults = self.results_type + '_' + strFilenameDatasetTraining + '_' + strFilenameDatasetTesting + '_' + strFilenameClassifier;
+        return strFilenameResults;
+
+
+    def _getDirResults(self, dir_results):
+        str = dir_results + self.classifier_options.getName() + '/' + self.results_type + '/';
+        if not os.path.exists(str):
+            os.makedirs(str);
+        return str;
+
+
+    def _writeNumericListOfListToFile(self, numList, filename):
+        file = open(filename, 'w');
+        for list in numList:
+            if len(list) > 0:
+                file.write(str(list[0]));
+                for k in range(1, len(list)):
+                    file.write(',' + str(list[k]));
+                file.write('\n');
+        file.close();
+
+
+    def _getPrecisionAllRuns(self):
+        precision_all = [];
+        for res in self.results_all_runs:
+            precision_all.append(res.getPrecision());
+        return precision_all;
+
+
+    def _getRecallAllRuns(self):
+        recall_all = [];
+        for res in self.results_all_runs:
+            recall_all.append(res.getRecall());
+        return recall_all;
+
+
+    def _getFMeasureAllRuns(self):
+        fmeasure_all = [];
+        for res in self.results_all_runs:
+            fmeasure_all.append(res.getFMeasure());
+        return fmeasure_all;
+
+
+    def _getTprAllRuns(self):
+        tpr_all = [];
+        for res in self.results_all_runs:
+            tpr_all.append(res.getTPR());
+        return tpr_all;
+
+
+    def _getFprAllRuns(self):
+        fpr_all = [];
+        for res in self.results_all_runs:
+            fpr_all.append(res.getFPR());
+        return fpr_all;
+
+
+    def _getAvgPrecisionAllRuns(self):
+        avgprecision_all = [];
+        for res in self.results_all_runs:
+            avgprecision_all.append(res.getAvgPrecision());
+        return avgprecision_all;
+
+
+    def _getAUCAllRuns(self):
+        auc_all = [];
+        for res in self.results_all_runs:
+            auc_all.append(res.getAUC())
+        return auc_all;
+
+
+    def addResultsSingleRun(self, res):
+        self.results_all_runs.append(res);
+
+
+    def writeResultsToFileDataset(self):
+        filename_precision = self.dir_results + self.filename_options + '_precision.txt';
+        filename_recall = self.dir_results + self.filename_options + '_recall.txt'
+        filename_fmeasure = self.dir_results + self.filename_options + '_fmeasure.txt'
+        filename_tpr = self.dir_results + self.filename_options + '_tpr.txt'
+        filename_fpr = self.dir_results + self.filename_options + '_fpr.txt';
+        filename_auc = self.dir_results + self.filename_options + '_auc.txt';
+        filename_avgprecision = self.dir_results + self.filename_options + '_avgprecision.txt';
+
+        precision = self._getPrecisionAllRuns();
+        recall = self._getRecallAllRuns();
+        fmeasure = self._getFMeasureAllRuns();
+        tpr = self._getTprAllRuns();
+        fpr = self._getFprAllRuns();
+        auc = self._getAUCAllRuns();
+        avg_precision = self._getAvgPrecisionAllRuns();
+
+        self._writeNumericListOfListToFile(precision, filename_precision);
+        self._writeNumericListOfListToFile(recall, filename_recall);
+        self._writeNumericListOfListToFile(fmeasure, filename_fmeasure);
+        self._writeNumericListOfListToFile(tpr, filename_tpr);
+        self._writeNumericListOfListToFile(fpr, filename_fpr);
+        self._writeNumericListOfListToFile([auc], filename_auc)
+        self._writeNumericListOfListToFile([avg_precision], filename_avgprecision)
 
 
 
