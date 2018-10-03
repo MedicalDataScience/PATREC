@@ -1,20 +1,17 @@
 
 import sklearn.metrics as metrics
 from sklearn.externals import joblib
+from sklearn import preprocessing
 
 from utils.Results import ResultsSingleRun
 
+
+
 class BaseClassifier:
 
-    def __init__(self, clf_name, num_folds = 10):
-        self.training_set_folds = num_folds;
-        self.clf_name = clf_name;
+    def __init__(self):
         self.clf = None;
         return;
-
-
-    def __saveClassifier(self, filename_classifier):
-        joblib.dump(self.clf, filename_classifier);
 
 
     def __loadClassifier(self, filename_classifier):
@@ -31,6 +28,7 @@ class BaseClassifier:
     def predict(self, df):
         labels = df['Wiederkehrer'].values;
         data = df.drop('Wiederkehrer', axis=1).values;
+
         predictions = self.clf.predict_proba(data);
         fpr, tpr, thresholds_fprtpr = metrics.roc_curve(labels, predictions[:, 1]);
         precision, recall, thresholds_pr = metrics.precision_recall_curve(labels, predictions[:, 1]);
@@ -48,3 +46,4 @@ class BaseClassifier:
         results.roc_auc = roc_auc;
         results.calcFMeasure(precision, recall);
         return results;
+
