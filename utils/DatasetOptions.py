@@ -18,17 +18,18 @@ class DatasetOptions:
         self.options_filtering = options['options_filtering']
         self.chunksize = options['chunksize'];
         self.ratio_training_samples = options['ratio_training_samples'];
+
+        self.filename_options = self._getFilenameOptions();
         self.filename = self._getFilename();
         return;
 
 
-    def _getFilename(self):
-        str = self.dir_data + '/data_' + self.dataset;
-        
+    def _getFilenameOptions(self):
+        str = self.dataset;
         str = str + '_' + self.featureset;
-        #if self.options_featureset is not None:
+        # if self.options_featureset is not None:
         #    str = str + self.options_featureset;
-        
+
         str = str + '_' + self.encoding;
         if self.options_encoding is not None:
             str = str + self.options_grouping;
@@ -39,7 +40,14 @@ class DatasetOptions:
 
         if self.options_filtering is not None:
             str = str + '_' + self.options_filtering;
+        self.filename_options = str;
 
+
+    def _getFilename(self):
+        str = self.dir_data + '/data_';
+        if self.filename_options is None:
+            self._getFilenameOptions();
+        str = str + self.filename_options;
         str = str + '.csv';
         return str;
 
@@ -54,6 +62,10 @@ class DatasetOptions:
 
     def getSubgroups(self):
         return self.subgroups;
+
+
+    def getGroupingName(self):
+        return self.grouping;
 
 
     def getFeatureSet(self):
@@ -85,6 +97,12 @@ class DatasetOptions:
             print('dataset is not known...exit')
             sys.exit()
         return filename;
+
+
+    def getFilenameOptions(self):
+        if self.filename_options is None:
+            self._getFilenameOptions();
+        return self.filename_options;
 
 
     def getFilename(self):
