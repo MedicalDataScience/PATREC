@@ -22,7 +22,7 @@ options_reduction = {'reduction_method': 'NOADMIN'};
 
 dict_dataset_options = {
     'dir_data':                 dirData,
-    'dataset':                  '20122015',
+    'dataset':                  '20162017',
     'subgroups':                ['OE', 'DK', 'CHOP'],
     'featureset':               'newfeatures',
     'options_featureset':       options_newfeatures,
