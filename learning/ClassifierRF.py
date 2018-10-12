@@ -4,38 +4,31 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.externals import joblib
 
 from learning.BaseClassifier import BaseClassifier
+from learning.BaseClassifier import BaseOptionsClassifier
 
+class OptionsRF(BaseOptionsClassifier):
 
-class OptionsRF():
-
-    def __init__(self, dir_models_base, options_filename_dataset_training, options_dict=None):
-        self.name = 'rf';
-        self.dir_model = self._getDirModel(dir_models_base);
+    def __init__(self, dir_models_base, options_filename_dataset_training, options_clf=None):
         self.n_estimators = 100;
         self.max_depth = 15;
         self.random_state = None;
         self.class_weight = None;
         self.n_jobs = 8;
-        self.filename_options_training_data = options_filename_dataset_training;
 
-        if options_dict is not None:
-            if options_dict['n_estimators'] is not None:
-                self.n_estimators = options_dict['n_estimators'];
-            if options_dict['max_depth'] is not None:
-                self.max_depth = options_dict['max_depth'];
-            if options_dict['random_state'] is not None:
-                self.random_state = options_dict['random_state'];
-            if options_dict['class_weight'] is not None:
-                self.class_weight = options_dict['class_weight'];
-            if options_dict['n_jobs'] is not None:
-                self.n_jobs = options_dict['n_jobs'];
+        if options_clf is not None:
+            if 'n_estimators' in options_clf.keys():
+                self.n_estimators = options_clf['n_estimators'];
+            if 'max_depth' in options_clf.keys():
+                self.max_depth = options_clf['max_depth'];
+            if 'random_state' in options_clf.keys():
+                self.random_state = options_clf['random_state'];
+            if 'class_weight' in options_clf.keys():
+                self.class_weight = options_clf['class_weight'];
+            if 'n_jobs' in options_clf.keys():
+                self.n_jobs = options_clf['n_jobs'];
+        BaseOptionsClassifier.__init__(self, 'rf', dir_models_base, options_filename_dataset_training, self._getFilenameOptionsRF());
+        return;
 
-
-    def _getDirModel(self, dir_models_base):
-        dir_models = dir_models_base + '/' + self.name + '/';
-        if not os.path.exists(dir_models):
-            os.makedirs(dir_models);
-        return dir_models;
 
     def getNumEstimators(self):
         return self.n_estimators;
@@ -52,37 +45,10 @@ class OptionsRF():
     def getNumJobs(self):
         return self.n_jobs;
 
-    def getName(self):
-        return self.name;
-
-    def getFilenameOptions(self):
-        strOpt = self.name;
-        strOpt = strOpt + '_numEst' + str(self.n_estimators);
+    def _getFilenameOptionsRF(self):
+        strOpt = 'numEst' + str(self.n_estimators);
         strOpt = strOpt + '_maxDepth' + str(self.max_depth);
         return strOpt
-
-    def getFilenameOptionsTrainingData(self):
-        return self.filename_options_training_data;
-
-
-    def getFilenameLearnedFeatures(self, run):
-        filename = self.dir_model + 'learned_features_' + self.getFilenameOptions() + '_' + self.filename_options_training_data + '_run' + str(run) + '.sav';
-        return filename;
-
-
-    def getFilenameClf(self, run):
-        filename = self.dir_model + self.getFilenameOptions() + '_' + self.filename_options_training_data + '_run' + str(run) + '.sav';
-        return filename;
-
-
-    def getDirModel(self):
-        return self.dir_model;
-
-
-
-
-
-
 
 
 
@@ -96,6 +62,7 @@ class ClassifierRF(BaseClassifier):
                                           random_state=self.options.getRandomState(),
                                           n_jobs=self.options.getNumJobs(),
                                           class_weight=self.options.getClassWeight());
+
         return;
 
 
@@ -103,16 +70,14 @@ class ClassifierRF(BaseClassifier):
         return self.clf.feature_importances_;
 
 
-    def _writeNumericListToFile(self, numList, filename):
-        file = open(filename, 'w');
-        for num in numList:
-            file.write(str(num) + '\n');
-        file.close();
-
-
     def save(self, run):
         filename = self.options.getFilenameClf(run);
         joblib.dump(self.clf, filename);
+
+
+    def loadFromFile(self, run):
+        filename = self.options.getFilenameClf(run);
+        BaseClassifier._loadClassifier(self, filename);
 
 
     def saveLearnedFeatures(self, run):

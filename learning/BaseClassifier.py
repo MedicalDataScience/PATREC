@@ -1,9 +1,46 @@
 
+import os
 import sklearn.metrics as metrics
 from sklearn.externals import joblib
-from sklearn import preprocessing
 
 from utils.Results import ResultsSingleRun
+
+
+class BaseOptionsClassifier:
+
+    def __init__(self, name, dir_models_base, options_filename_dataset_training, filename_options_clf):
+        self.name = name;
+        self.dir_model = self._getDirModel(dir_models_base)
+        self.filename_options_training_data = options_filename_dataset_training;
+        self.filename_options_clf = filename_options_clf;
+        return;
+
+    def _getDirModel(self, dir_models_base):
+        dir_models = dir_models_base + '/' + self.name + '/';
+        if not os.path.exists(dir_models):
+            os.makedirs(dir_models);
+        return dir_models;
+
+    def getFilenameOptionsTrainingData(self):
+        return self.filename_options_training_data;
+
+    def getFilenameLearnedFeatures(self, run):
+        filename = self.dir_model + 'learned_features_' + self.name + '_' + self.filename_options_clf + '_' + self.filename_options_training_data + '_run' + str(run) + '.sav';
+        return filename;
+
+    def getFilenameClf(self, run):
+        filename = self.dir_model + self.name + '_' + self.filename_options_clf + '_' + self.filename_options_training_data + '_run' + str(run) + '.sav';
+        return filename;
+
+    def getDirModel(self):
+        return self.dir_model;
+
+    def getName(self):
+        return self.name;
+
+    def getFilenameOptions(self):
+        strOpt = self.name + '_' + self.filename_options_clf;
+        return strOpt;
 
 
 
@@ -14,20 +51,22 @@ class BaseClassifier:
         return;
 
 
-    def __loadClassifier(self, filename_classifier):
+    def _loadClassifier(self, filename_classifier):
         clf_model = joblib.load(filename_classifier)
         self.clf = clf_model;
 
 
-    def train(self, df):
-        labels = df['Wiederkehrer'].values;
-        data = df.drop('Wiederkehrer', axis=1).values;
+    def train(self, df, early_readmission_flagname):
+        print('training data: ' + str(df.shape))
+        labels = df[early_readmission_flagname].values;
+        data = df.drop(early_readmission_flagname, axis=1).values;
         self.clf.fit(data, labels);
 
 
-    def predict(self, df):
-        labels = df['Wiederkehrer'].values;
-        data = df.drop('Wiederkehrer', axis=1).values;
+    def predict(self, df, early_readmission_flagname):
+        print('prediction data: ' + str(df.shape))
+        labels = df[early_readmission_flagname].values;
+        data = df.drop(early_readmission_flagname, axis=1).values;
 
         predictions = self.clf.predict_proba(data);
         fpr, tpr, thresholds_fprtpr = metrics.roc_curve(labels, predictions[:, 1]);
@@ -46,4 +85,12 @@ class BaseClassifier:
         results.roc_auc = roc_auc;
         results.calcFMeasure(precision, recall);
         return results;
+
+
+    def _writeNumericListToFile(self, numList, filename):
+        file = open(filename, 'w');
+        for num in numList:
+            file.write(str(num) + '\n');
+        file.close();
+
 
