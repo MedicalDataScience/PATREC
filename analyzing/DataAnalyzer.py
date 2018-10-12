@@ -1,13 +1,16 @@
-
+import sys
 import matplotlib.pyplot as plt
 import numpy as np
+from datetime import datetime
+import pandas as pd
 
-from helpers.helpers import getFeatureCategories
+from utils.Dataset import Dataset
 
 class DataAnalyzer:
 
-    def __init__(self, dataset, dir_plots):
-        self.dataset = dataset;
+    def __init__(self, dataset_options, dir_plots):
+        self.dataset_options = dataset_options;
+        self.dataset = Dataset(dataset_options=dataset_options);
         self.dir_plots = dir_plots;
         return;
 
@@ -18,7 +21,7 @@ class DataAnalyzer:
 
 
     def _getFeatureValues(self, df, name_feature):
-        column_names = self.dataset.getColumns();
+        column_names = self.dataset.getColumnsDf();
         feature_columns = [];
         for col in column_names:
             if col.startswith(name_feature):
@@ -33,7 +36,7 @@ class DataAnalyzer:
     def _doComparisonBar(self, df, name_feature):
         filename_plot = self.dir_plots + 'featurecomparison_' + name_feature + '.png';
         print(name_feature)
-        categories_feature = getFeatureCategories(name_feature);
+        categories_feature = self.dataset_options.getFeatureCategories(name_feature);
         print(categories_feature)
         values_to_count = range(0, len(categories_feature));
 
@@ -163,4 +166,127 @@ class DataAnalyzer:
         self._doComparisonBar(df, 'Liegestatus');
         self._doComparisonBar(df, 'Hauptdiagnose');
         self._doComparisonBar(df, 'CHOP');
+
+
+    def _getRatioWiederkehrerFlag(self):
+        early_readmission_flag = self.dataset_options.getEarlyReadmissionFlagname();
+        df = self.dataset.getDf();
+        df_wiederkehrer = df[early_readmission_flag]
+        num_wiederkehrer = int(df_wiederkehrer.sum(axis=0));
+        num_all = int(df.shape[0])
+        print('num all: ' + str(num_all))
+        print('num_wiederkehrer: ' + str(df_wiederkehrer.sum(axis=0)));
+        print('ratio wiederkehrer: ' + str(float(num_wiederkehrer)/float(num_all)));
+
+
+    def _getRatio18DaysReturn(self):
+        df = self.dataset.getDf();
+        df = df.sort_values(by=['Patient', 'Aufnahmedatum'])
+        patient_ids_wiederkehrer = df['Patient'].unique();
+        single_visiting_patients = 0;
+        for k in range(0, len(patient_ids_wiederkehrer)):
+            p_id = patient_ids_wiederkehrer[k]
+            cases_df = df.loc[df['Patient'] == p_id];
+            new_patient = True;
+            if cases_df.shape[0] == 1:
+                single_visiting_patients += 1;
+            for index,row in cases_df.iterrows():
+                if not new_patient:
+                    timestamp_enter = row['Aufnahmedatum'];
+                    diff = (datetime.fromtimestamp(timestamp_enter) - datetime.fromtimestamp(timestamp_previous_exit));
+                    days = diff.days;
+                    if int(days)<=18:
+                        # print(str(datetime.fromtimestamp(timestamp_enter).strftime("%y,%m,%d")) + ' vs. ' + str(datetime.fromtimestamp(timestamp_previous_exit).strftime("%y,%m,%d")))
+                        # print(str(int(row['Patient'])) + ': ' + ' --> ' + str(days) + ' --> ' + str(row['Wiederkehrer']))
+                        df.at[index_previous,'Wiederkehrer'] = 1;
+                else:
+                    new_patient = False;
+                timestamp_previous_exit = row['Entlassdatum'];
+                index_previous = index;
+
+        num_wiederkehrer_all = int(df['Wiederkehrer'].sum(axis=0));
+        num_all = int(df.shape[0])
+        print('patients with only a single visit: ' + str(single_visiting_patients))
+        print('num all: ' + str(num_all))
+        print('num wiedekehrer all: ' + str(num_wiederkehrer_all))
+        print('ratio wiederkehrer all: ' + str(float(num_wiederkehrer_all)/float(num_all)))
+
+
+    def checkWiederkehrer(self):
+        self._getRatioWiederkehrerFlag();
+        if self.dataset_options.getDataPrefix() == 'patrec':
+            self._getRatio18DaysReturn()
+
+
+    def _getNumberColumnsSubgroupPatrec(self, subgroup):
+        dir_data = self.dataset_options.getDirData();
+        dataset = self.dataset_options.getDatasetName();
+        chunksize = self.dataset_options.getChunkSize();
+        filename_data_subgroup = dir_data + 'data_patrec_' + dataset + '_' + subgroup + '_clean.csv';
+
+        subgroup_data_reader = pd.read_csv(filename_data_subgroup, chunksize=chunksize);
+        for k, chunk in enumerate(subgroup_data_reader):
+            chunk = chunk.drop(self.dataset_options.getEventColumnName(), axis=1);
+            columns = list(chunk.columns);
+            sum_chunk = chunk.sum(axis=0);
+            if k == 0:
+                sum_subgroup = pd.DataFrame(data=np.zeros((1, len(columns))), columns=columns);
+            sum_subgroup = sum_subgroup.add(sum_chunk);
+
+        num_columns = int(sum_subgroup.astype(bool).sum(axis=1).values);
+        print(subgroup + ' --> number of columns: ' + str(len(columns)))
+        print(subgroup + ' --> number of non-zero columns: ' + str(num_columns))
+
+
+    def _getNumberColumnsSubgroupNZ(self, subgroup):
+        dir_data = self.dataset_options.getDirData();
+        dataset = self.dataset_options.getDatasetName();
+        chunksize = self.dataset_options.getChunkSize();
+        filename_data_subgroup = dir_data + 'data_nz_' + dataset + '_' + subgroup + '_clean.csv';
+
+
+
+    def _getNumberHauptdiagnosePatrec(self):
+        dir_data = self.dataset_options.getDirData();
+        dataset = self.dataset_options.getDatasetName();
+        filename_data = dir_data + 'data_patrec_' + dataset + '_REST_clean.csv';
+        df = pd.read_csv(filename_data);
+        diff_values_hauptdiagnose = list(set(df['Hauptdiagnose'].values))
+        print('Hauptdiagnose --> number of values: ' + str(len(diff_values_hauptdiagnose)));
+
+
+    def _getNumberHauptdiagnoseNZ(self):
+        dir_data = self.dataset_options.getDirData();
+        dataset = self.dataset_options.getDatasetName();
+        filename_data = dir_data + 'data_nz_' + dataset + '_discharge.csv';
+        df = pd.read_csv(filename_data);
+        diff_values_hauptdiagnose = list(set(df['main_diag'].values))
+        print('Hauptdiagnose --> number of values: ' + str(len(diff_values_hauptdiagnose)));
+
+
+    def getNumberColumnsSubgroup(self, subgroup):
+        data_prefix = self.dataset_options.getDataPrefix();
+        if data_prefix == 'patrec':
+            self._getNumberColumnsSubgroupPatrec(subgroup);
+        elif data_prefix == 'nz':
+            pass;
+        else:
+            print('data prefix is unknown...exit')
+            sys.exit()
+
+
+    def getNumberHauptdiagnose(self):
+        data_prefix = self.dataset_options.getDataPrefix();
+        if data_prefix == 'patrec':
+            self._getNumberHauptdiagnosePatrec();
+        elif data_prefix == 'nz':
+            self._getNumberHauptdiagnoseNZ()
+        else:
+            print('data prefix is unknown...exit')
+            sys.exit();
+
+
+
+
+
 

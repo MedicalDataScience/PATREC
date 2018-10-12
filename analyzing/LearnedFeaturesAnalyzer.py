@@ -33,8 +33,9 @@ class LearnedFeaturesAnalyzer:
 
 
     def _readFeatureWeights(self):
-        feature_names = self.dataset_training.getFinalColumns();
-        feature_names.pop(feature_names.index('Wiederkehrer'))
+        early_readmission_flagname = self.options_training_data.getEarlyReadmissionFlagname();
+        feature_names = self.dataset_training.getColumnsData();
+        feature_names.pop(feature_names.index(early_readmission_flagname))
         feature_weights = np.zeros((self.num_runs, len(feature_names)))
         for run in range(0, self.num_runs):
             feature_coefs = self._readFeatureCoefsFromFile(run);
@@ -79,6 +80,7 @@ class LearnedFeaturesAnalyzer:
 
     def plotAvgLearnedFeatures(self, num_features=50):
         filename = self.dir_plots + 'learnedfeatures_avg_' + self.options_classifier.getFilenameOptions() + '_' + self.options_classifier.filename_options_training_data + '.png';
+        print(filename)
         [avg_weights, names] = self._getSortedAvgFeatureWeights(num_features);
         index_vec = range(0, num_features);
         fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(15, 7));
