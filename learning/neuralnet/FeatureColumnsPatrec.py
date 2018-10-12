@@ -4,12 +4,12 @@ import math as math
 
 import helpers.helpers as helpers
 
-class NeuralNetModelPatrec:
+class FeatureColumnsPatrec:
     def __init__(self, dataset_options):
         self.dataset_options = dataset_options;
         return;
 
-    def _build_model_columns_embedding(self):
+    def buildModelColumns(self):
         """Builds a set of wide and deep feature columns."""
         # Continuous columns
 
@@ -155,9 +155,9 @@ class NeuralNetModelPatrec:
             elif h == 'Entlasstag':
                 default_values.append([''])
             elif h == 'Aufnahmejahr':
-                default_values.append([0])
+                default_values.append([''])
             elif h == 'Entlassjahr':
-                default_values.append([0])
+                default_values.append([''])
             elif h == 'Patient':
                 default_values.append([0.0])
             elif h == 'Aufnahmedatum':
@@ -173,9 +173,9 @@ class NeuralNetModelPatrec:
             elif h == 'Hauptdiagnose':
                 default_values.append([''])
             elif h == 'AufnehmOE':
-                default_values.append([0])
+                default_values.append([''])
             elif h == 'EntlassOE':
-                default_values.append([0])
+                default_values.append([''])
             elif h == 'DRGCode':
                 default_values.append([''])
             elif h == 'DK':
