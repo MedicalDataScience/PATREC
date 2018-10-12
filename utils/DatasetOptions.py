@@ -5,7 +5,7 @@ from utils.BaseDatasetOptions import BaseDatasetOptions
 import helpers.constants as constantsPATREC
 import helpers.constantsNZ as constantsNZ
 
-class DatasetOptionsPatrec(BaseDatasetOptions):
+class DatasetOptions(BaseDatasetOptions):
 
     def __init__(self, options):
         BaseDatasetOptions.__init__(self)

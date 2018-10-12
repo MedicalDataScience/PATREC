@@ -25,8 +25,9 @@ class DatasetSplitter:
 
 
     def __splitDataset(self, df):
-        df_pos = df.loc[df['Wiederkehrer'] == 1]
-        df_neg = df.loc[df['Wiederkehrer'] == 0]
+        early_readmission_flag = self.options.getEarlyReadmissionFlagname();
+        df_pos = df.loc[df[early_readmission_flag] == 1]
+        df_neg = df.loc[df[early_readmission_flag] == 0]
         df_pos = df_pos.sample(frac=1);
         df_neg = df_neg.sample(frac=1);
         return [df_pos, df_neg];
@@ -54,14 +55,36 @@ class DatasetSplitter:
         testing = [df_pos_testing, df_neg_testing];
         return [training, testing]
 
+    def __splitDataTrainingTestingBalanced(self, df):
+        ratio_training_samples = self.options.getRatioTrainingSamples();
+
+        [df_pos, df_neg] = self.__splitDataset(df)
+        num_pos_samples = df_pos.shape[0];
+        num_pos_samples_training = int(round(ratio_training_samples * num_pos_samples));
+        num_pos_samples_testing = num_pos_samples - num_pos_samples_training;
+
+        df_pos_training = df_pos.iloc[:num_pos_samples_training, :];
+        df_neg_training = df_neg.iloc[:num_pos_samples_training, :];
+        df_pos_testing = df_pos.iloc[-num_pos_samples_testing:, :];
+        df_neg_testing = df_neg.iloc[-num_pos_samples_testing:, :];
+
+        training = [df_pos_training, df_neg_training];
+        testing = [df_pos_testing, df_neg_testing];
+        return [training, testing]
+
+
+
     def __splitDataAll(self, df):
         dir_data = self.options.getDirData();
-        filename_option_str = self.__getFilenameOptionStr()
-        filename_data_out_pos = dir_data + 'data_' + filename_option_str + '_pos_all' + '.csv';
-        filename_data_out_neg = dir_data + 'data_' + filename_option_str + '_neg_all' + '.csv';
+        data_prefix = self.options.getDataPrefix();
+        early_readmission_flag = self.options.getEarlyReadmissionFlagname();
 
-        df_pos = df.loc[df['Wiederkehrer'] == 1]
-        df_neg = df.loc[df['Wiederkehrer'] == 0]
+        filename_option_str = self.__getFilenameOptionStr()
+        filename_data_out_pos = dir_data + 'data_' + data_prefix + '_' + filename_option_str + '_pos_all' + '.csv';
+        filename_data_out_neg = dir_data + 'data_' + data_prefix + '_' + filename_option_str + '_neg_all' + '.csv';
+
+        df_pos = df.loc[df[early_readmission_flag] == 1]
+        df_neg = df.loc[df[early_readmission_flag] == 0]
         df_pos = df_pos.sample(frac=1);
         df_neg = df_neg.sample(frac=1);
 
@@ -71,13 +94,15 @@ class DatasetSplitter:
 
     def __splitDataBalanced(self, df):
         dir_data = self.options.getDirData();
+        data_prefix = self.options.getDataPrefix();
+        early_readmission_flag = self.options.getEarlyReadmissionFlagname();
         filename_option_str = self.__getFilenameOptionStr()
-        filename_data_out_pos = dir_data + 'data_' + filename_option_str + '_pos_balanced' + '.csv';
-        filename_data_out_neg = dir_data + 'data_' + filename_option_str + '_neg_balanced' + '.csv';
-        filename_data_out = dir_data + 'data_' + filename_option_str + '_balanced' + '.csv';
+        filename_data_out_pos = dir_data + 'data_' + data_prefix + '_' + filename_option_str + '_pos_balanced' + '.csv';
+        filename_data_out_neg = dir_data + 'data_' + data_prefix + '_' + filename_option_str + '_neg_balanced' + '.csv';
+        filename_data_out = dir_data + 'data_' + data_prefix + '_' + filename_option_str + '_balanced' + '.csv';
 
-        df_pos = df.loc[df['Wiederkehrer'] == 1]
-        df_neg = df.loc[df['Wiederkehrer'] == 0]
+        df_pos = df.loc[df[early_readmission_flag] == 1]
+        df_neg = df.loc[df[early_readmission_flag] == 0]
         df_pos = df_pos.sample(frac=1);
         df_neg = df_neg.sample(frac=1);
 
@@ -97,12 +122,32 @@ class DatasetSplitter:
 
     def __splitDatasetIntoTrainingTestingAll(self, df):
         dir_data = self.options.getDirData();
+        data_prefix = self.options.getDataPrefix();
+
         filename_option_str = self.__getFilenameOptionStr()
         [training, testing] = self.__splitDataTrainingTestingAll(df);
-        filename_data_out_pos_training = dir_data + 'data_' + filename_option_str + '_pos_training' + '.csv';
-        filename_data_out_neg_training = dir_data + 'data_' + filename_option_str + '_neg_training' + '.csv';
-        filename_data_out_pos_testing = dir_data + 'data_' + filename_option_str + '_pos_testing' + '.csv';
-        filename_data_out_neg_testing = dir_data + 'data_' + filename_option_str + '_neg_testing' + '.csv';
+        filename_data_out_pos_training = dir_data + 'data_' + data_prefix + '_' + filename_option_str + '_pos_training' + '.csv';
+        filename_data_out_neg_training = dir_data + 'data_' + data_prefix + '_' + filename_option_str + '_neg_training' + '.csv';
+        filename_data_out_pos_testing = dir_data + 'data_' + data_prefix + '_' + filename_option_str + '_pos_testing' + '.csv';
+        filename_data_out_neg_testing = dir_data + 'data_' + data_prefix + '_' + filename_option_str + '_neg_testing' + '.csv';
+        training[1].to_csv(filename_data_out_neg_training, line_terminator='\n', index=False);
+        training[0].to_csv(filename_data_out_pos_training, line_terminator='\n', index=False);
+        testing[1].to_csv(filename_data_out_neg_testing, line_terminator='\n', index=False);
+        testing[0].to_csv(filename_data_out_pos_testing, line_terminator='\n', index=False);
+
+
+    def __splitDatasetIntoTrainingTestingBalanced(self, df):
+        dir_data = self.options.getDirData();
+        data_prefix = self.options.getDataPrefix();
+
+
+
+        filename_option_str = self.__getFilenameOptionStr()
+        [training, testing] = self.__splitDataTrainingTestingBalanced(df);
+        filename_data_out_pos_training = dir_data + 'data_' + data_prefix + '_' + filename_option_str + '_balanced_pos_training' + '.csv';
+        filename_data_out_neg_training = dir_data + 'data_' + data_prefix + '_' + filename_option_str + '_balanced_neg_training' + '.csv';
+        filename_data_out_pos_testing = dir_data + 'data_' + data_prefix + '_' + filename_option_str + '_balanced_pos_testing' + '.csv';
+        filename_data_out_neg_testing = dir_data + 'data_' + data_prefix + '_' + filename_option_str + '_balanced_neg_testing' + '.csv';
         training[1].to_csv(filename_data_out_neg_training, line_terminator='\n', index=False);
         training[0].to_csv(filename_data_out_pos_training, line_terminator='\n', index=False);
         testing[1].to_csv(filename_data_out_neg_testing, line_terminator='\n', index=False);
@@ -111,10 +156,19 @@ class DatasetSplitter:
 
     def splitDatasetIntoTrainingTesting(self):
         dir_data = self.options.getDirData();
+        data_prefix = self.options.getDataPrefix();
+
         filename_option_str = self.__getFilenameOptionStr()
-        filename_data_in = dir_data + 'data_' + filename_option_str + '.csv';
+        filename_data_in = dir_data + 'data_' + data_prefix + '_' + filename_option_str + '.csv';
         df = pd.read_csv(filename_data_in);
+        colums_to_remove = self.options.getColumnsToRemove();
+        for col in colums_to_remove:
+            try:
+                df = df.drop(col, axis=1);
+            except ValueError:
+                pass;
 
         self.__splitDatasetIntoTrainingTestingAll(df);
+        self.__splitDatasetIntoTrainingTestingBalanced(df);
         self.__splitDataAll(df);
         self.__splitDataBalanced(df);

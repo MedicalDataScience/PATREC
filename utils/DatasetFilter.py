@@ -18,6 +18,7 @@ class DatasetFilter:
 
     def filterDataBinaryColumns(self, filterKey):
         dir_data = self.options.getDirData();
+        data_prefix = self.options.getDataPrefix();
         dataset = self.options.getDatasetName();
         featureset = self.options.getFeatureSet();
         encoding = self.options.getEncodingScheme();
@@ -26,9 +27,10 @@ class DatasetFilter:
 
         strFilenameIn = dataset + '_' + filename_options_in;
         strFilenameOut = strFilenameIn + '_' + filterKey;
-        filename_data_in = dir_data + 'data_' + strFilenameIn + '.csv';
-        filename_data_out = dir_data + 'data_' + strFilenameOut + '.csv';
+        filename_data_in = dir_data + 'data_' + data_prefix + '_' + strFilenameIn + '.csv';
+        # filename_data_out = dir_data + 'data_' + strFilenameOut + '.csv';
 
         df = pd.read_csv(filename_data_in);
         df_filtered = self.__filterBinaryColumn(df, filterKey);
-        df_filtered.to_csv(filename_data_out, line_terminator='\n', index=False);
+        # df_filtered.to_csv(filename_data_out, line_terminator='\n', index=False);
+        return df_filtered;
