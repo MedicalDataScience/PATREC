@@ -10,12 +10,8 @@ class DataCleaner:
 
     def __init__(self, options_dataset, filename_options_in, filename_options_out):
         self.options = options_dataset;
-        self.chunksize = self.options.getChunksize();
-        self.dir_data = self.options.getDirData();
         self.filename_options_in = filename_options_in;
         self.filename_options_out = filename_options_out;
-        self.dataset = self.options.getDatasetName();
-        self.subgroups = self.options.getSubgroups();
 
 
     def __filterColumns(self, df, column_name, column_value):
@@ -164,17 +160,22 @@ class DataCleaner:
 
 
     def cleanData(self):
+        dir_data = self.options.getDirData();
+        data_prefix = self.options.getDataPrefix();
+        dataset = self.options.getDatasetName();
+        chunksize = self.options.getChunksize();
+        subgroups = self.options.getSubgroups();
         if self.filename_options_in is not None:
-            strFilenameIn = self.dataset + '_REST' + '_' + self.filename_options_in;
+            strFilenameIn = dataset + '_REST' + '_' + self.filename_options_in;
         else:
-            strFilenameIn = self.dataset + '_REST'
+            strFilenameIn = dataset + '_REST'
         if self.filename_options_out is not None:
             strFilenameOut = strFilenameIn + '_' + self.filename_options_out;
         else:
             strFilenameOut = strFilenameIn + '_' + self.filename_options_out;
 
-        filename_data_in = self.dir_data + 'data_' + strFilenameIn + '.csv';
-        filename_data_out_clean = self.dir_data + 'data_' + strFilenameOut + '.csv';
+        filename_data_in = dir_data + data_prefix + '_' + strFilenameIn + '.csv';
+        filename_data_out_clean = dir_data + data_prefix + '_' + strFilenameOut + '.csv';
         print(filename_data_in)
 
         data_df = pd.read_csv(filename_data_in);
@@ -199,13 +200,13 @@ class DataCleaner:
         clean_df.to_csv(filename_data_out_clean, mode='w', index=False, line_terminator='\n');
         cases_clean = clean_df['Fall'].values;
 
-        for g in self.subgroups:
+        for g in subgroups:
             print('subgroup: ' + str(g))
-            strFilenameIn = self.dataset + '_' + g;
-            strFilenameOut = self.dataset + '_' + g + '_' + self.filename_options_out;
-            filename_data_subgroup_in = self.dir_data + 'data_' + strFilenameIn + '.csv';
-            filename_data_subgroup_out = self.dir_data + 'data_' + strFilenameOut + '.csv';
-            subgroup_reader = pd.read_csv(filename_data_subgroup_in, chunksize=self.chunksize);
+            strFilenameIn = dataset + '_' + g;
+            strFilenameOut = dataset + '_' + g + '_' + self.filename_options_out;
+            filename_data_subgroup_in = dir_data + data_prefix + '_' + strFilenameIn + '.csv';
+            filename_data_subgroup_out = dir_data + data_prefix + '_' + strFilenameOut + '.csv';
+            subgroup_reader = pd.read_csv(filename_data_subgroup_in, chunksize=chunksize);
             for k, chunk in enumerate(subgroup_reader):
                 print('chunk: ' + str(k))
                 indices_keep = [];

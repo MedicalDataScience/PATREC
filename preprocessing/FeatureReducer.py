@@ -2,7 +2,6 @@
 import sys
 import pandas as pd
 
-from helpers.helpers import getAdminFeaturesNames
 
 class FeatureReducer:
 
@@ -26,7 +25,7 @@ class FeatureReducer:
 
 
     def __removeAdminFeatures(self, df):
-        group_names = getAdminFeaturesNames();
+        group_names = self.options.getAdminFeatureNames();
         column_names = list(df.columns);
 
         for name in column_names:
@@ -37,7 +36,7 @@ class FeatureReducer:
 
 
     def __removeAllButAdminFeatures(self, df):
-        group_names = getAdminFeaturesNames();
+        group_names = self.options.getAdminFeatureNames();
         column_names = list(df.columns);
 
         for name in column_names:
@@ -49,12 +48,14 @@ class FeatureReducer:
 
     def reduceFeatures(self):
         dir_data = self.options.getDirData();
+        data_prefix = self.options.getDataPrefix();
+
         reduction_method = self.options.getFeatureSetOptions()['reduction_method'];
         print('reduction method: ' + str(reduction_method))
         if reduction_method is not None:
             [filename_str_in, filename_str_out] = self.__getFilenameOptionsStr();
-            filename_data_in = dir_data + 'data_' + filename_str_in + '.csv';
-            filename_data_out = dir_data + 'data_' + filename_str_out + '.csv';
+            filename_data_in = dir_data + data_prefix + '_' + filename_str_in + '.csv';
+            filename_data_out = dir_data + data_prefix + '_' + filename_str_out + '.csv';
             df = pd.read_csv(filename_data_in);
 
             if reduction_method == 'NOADMIN':

@@ -14,13 +14,6 @@ class DataGrouper:
 
     def __init__(self, options_dataset):
         self.options = options_dataset;
-        self.dir_data = dir_data
-        self.dataset = dataset
-        self.filename_options_in = 'clean';
-        self.grouping = grouping;
-        self.filename_options_out = grouping;
-        self.subgroup_names = subgroup_names;
-        self.chunksize = chunksize;
         return;
 
 
@@ -41,33 +34,35 @@ class DataGrouper:
 
 
     def __getFilenameStrOutSubgroup(self, strGroup):
-        if self.filename_options_in is not None:
-            strFilenameIn = self.dataset + '_' + strGroup + '_' + self.filename_options_in;
-        else:
-            strFilenameIn = self.dataset + '_' + strGroup;
-
-        if self.filename_options_out is not None:
-            strFilenameOut = self.dataset + '_' + strGroup + '_' + self.filename_options_out;
-        else:
-            strFilenameOut = strFilenameIn;
+        dataset = self.options.getDatasetName();
+        grouping = self.options.getGroupingName();
+        strFilenameIn = dataset + '_' + strGroup + '_clean';
+        strFilenameOut = dataset + '_' + strGroup + '_' + grouping;
         return [strFilenameIn, strFilenameOut];
 
 
     def __copyRestGroup(self):
         strGroup = 'REST';
+        dir_data = self.options.getDirData();
+        data_prefix = self.options.getDataPrefix();
         [strFilenameIn, strFilenameOut] = self.__getFilenameStrOutSubgroup(strGroup);
-        filename_data_in = self.dir_data + 'data_' + strFilenameIn + '.csv';
-        filename_data_out = self.dir_data + 'data_' + strFilenameOut + '.csv';
+        filename_data_in = dir_data + 'data_' + data_prefix + '_' + strFilenameIn + '.csv';
+        filename_data_out = dir_data + 'data_' + data_prefix + '_' + strFilenameOut + '.csv';
         copy2(filename_data_in, filename_data_out);
 
 
     def __groupFeautureSubgroupNormal(self, strGroup):
         print('grouping: ' + str(strGroup))
+        dir_data = self.options.getDirData();
+        data_prefix = self.options.getDataPrefix();
+        chunksize = self.options.getChunkSize();
+
         [strFilenameIn, strFilenameOut] = self.__getFilenameStrOutSubgroup(strGroup);
-        filename_data_in = self.dir_data + 'data_' + strFilenameIn + '.csv';
-        filename_data_out = self.dir_data + 'data_' + strFilenameOut + '.csv';
+        filename_data_in = dir_data + 'data_' + data_prefix + '_' + strFilenameIn + '.csv';
+        filename_data_out = dir_data + 'data_' + data_prefix + '_' + strFilenameOut + '.csv';
         group_names = self.__getGroupNames(strGroup)
         print(group_names)
+        print(len(group_names))
 
         df_headers = pd.read_csv(filename_data_in, header=None, nrows=1)
         num_headers_data = len(df_headers.iloc[0]);
@@ -78,7 +73,7 @@ class DataGrouper:
         for k, h in enumerate(headers_data):
             headers_data_indices.append(headers_data.index(h));
 
-        data_reader = pd.read_csv(filename_data_in, usecols=headers_data_indices, chunksize=self.chunksize);
+        data_reader = pd.read_csv(filename_data_in, usecols=headers_data_indices, chunksize=chunksize);
 
         for k, chunk in enumerate(data_reader):
             print('chunk: ' + str(k))
@@ -114,8 +109,10 @@ class DataGrouper:
 
 
     def groupFeatures(self):
-        assert(self.grouping == 'grouping', 'the only implemented scheme is normal grouping...')
-        for subgroup in self.subgroup_names:
+        grouping = self.options.getGroupingName();
+        assert(grouping == 'grouping', 'the only implemented scheme is normal grouping...')
+        subgroups = self.options.getSubgroups();
+        for subgroup in subgroups:
             self.__groupFeautureSubgroupNormal(subgroup);
         self.__copyRestGroup();
 

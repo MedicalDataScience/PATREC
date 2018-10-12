@@ -206,9 +206,10 @@ class FeatureCreator:
         chunksize = self.options.getChunkSize();
         dir_data = self.options.getDirData();
         dataset = self.options.getDatasetName();
+        data_prefix = self.options.getDataPrefix();
         df_num = pd.DataFrame(columns=['num' + name_subgroup]);
         strFilenameIn = dataset + '_' + name_subgroup + '_clean';
-        filename_data_subgroup_in = dir_data + 'data_' + strFilenameIn + '.csv';
+        filename_data_subgroup_in = dir_data + 'data_' + data_prefix + '_' + strFilenameIn + '.csv';
         data_reader = pd.read_csv(filename_data_subgroup_in, chunksize=chunksize);
         for k, chunk in enumerate(data_reader):
             chunk = chunk.drop('Fall', axis=1);
@@ -242,9 +243,10 @@ class FeatureCreator:
             print('WARNING: empty list of names for new features...');
 
         dir_data = self.options.getDirData();
+        data_prefix = self.options.getDataPrefix();
         [filename_str_in, filename_str_out] = self.__getFilenameOptionStr()
-        filename_data_in = dir_data + 'data_' + filename_str_in + '.csv';
-        filename_data_out = dir_data + 'data_' + filename_str_out + '.csv';
+        filename_data_in = dir_data + 'data_' + data_prefix + '_' + filename_str_in + '.csv';
+        filename_data_out = dir_data + 'data_' + data_prefix + '_' + filename_str_out + '.csv';
         df = pd.read_csv(filename_data_in);
 
         df_newfeatures = self.__addFeaturesFromCleanData(df);

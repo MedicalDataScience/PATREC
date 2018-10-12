@@ -9,8 +9,8 @@ class ColumnSplitter:
 
     def __init__(self, options_dataset):
         self.options = options_dataset;
-        self.chunksize = self.options.getChunksize();
-        self.filename_data_src = self.options.getFilenameRawData(),
+        # self.chunksize = self.options.getChunksize();
+        # self.filename_data_src = self.options.getFilenameRawData(),
         self.headers_all_columns = self.__getHeadersAll();
         return;
 
@@ -76,7 +76,8 @@ class ColumnSplitter:
         return headers_filtered;
 
     def __getHeadersAll(self):
-        df_headers = pd.read_csv(self.filename_data_src, header=None, nrows=1)
+        filename_data_src = self.options.getFilenameRawData();
+        df_headers = pd.read_csv(filename_data_src, header=None, nrows=1)
         num_headers_data = len(df_headers.iloc[0]);
         print('num headers data: ' + str(num_headers_data))
 
@@ -95,7 +96,9 @@ class ColumnSplitter:
         print('headers_data_in_values.index(Fall): ' + str(self.headers_all_columns.index('Fall')))
         print('len(headers_subgroup_indices): ' + str(len(headers_subgroup_indices)))
 
-        readmission_data_reader = pd.read_csv(self.filename_data_src, usecols=headers_subgroup_indices, chunksize=self.chunksize);
+        chunksize = self.options.getChunksize();
+        filename_data_src = self.options.getFilenameRawData();
+        readmission_data_reader = pd.read_csv(filename_data_src, usecols=headers_subgroup_indices, chunksize=chunksize);
         for k, chunk in enumerate(readmission_data_reader):
             print('chunk: ' + str(k))
             print('chunk.shape: ' + str(chunk.shape))
@@ -109,7 +112,7 @@ class ColumnSplitter:
         dataset = self.options.getDatasetName();
         for g in self.options.getSubGroups():
             filename_out = dir_data + 'data_' + dataset + '_' + g + '.csv';
-            self._splitColumnsSubgroup(g, filename_out);
+            self.splitColumns(g, filename_out);
         filename_out_rest = dir_data + 'data_' + dataset + '_REST.csv';
         self.splitColumns('REST', filename_out_rest);
 

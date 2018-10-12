@@ -17,14 +17,15 @@ class FeatureSetCreator:
 
     def createFeatureSet(self):
         dir_data = self.options.getDirData();
+        data_prefix = self.options.getDataPrefix();
         dataset = self.options.getDatasetName();
         name = self.options.getFeatureSet();
         featureset_options = self.options.getFeatureSetOptions();
         subgroups = self.options.getSubgroups();
 
         if name == 'standard':
-            filename_data_in = dir_data + 'data_' + dataset + '_REST_' + self.filename_options_in + '.csv';
-            filename_data_out = dir_data + 'data_' + dataset + '_REST_' + name + '.csv';
+            filename_data_in = dir_data + 'data_' + data_prefix + '_' + dataset + '_REST_' + self.filename_options_in + '.csv';
+            filename_data_out = dir_data + 'data_' + data_prefix + '_' + dataset + '_REST_' + name + '.csv';
             copy2(filename_data_in, filename_data_out);
         elif name == 'newfeatures':
             assert subgroups is not None, 'subgroups are needed to create new features...exit'
