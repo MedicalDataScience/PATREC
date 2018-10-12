@@ -1,4 +1,5 @@
 import os
+import sys
 import numpy as np
 
 
@@ -79,7 +80,7 @@ class ResultsSingleRun:
 
 
 class Results:
-    def __init__(self, dir_results, dataset_options_training, dataset_options_testing, classifier_options, results_type):
+    def __init__(self, dir_results, dataset_options_training, classifier_options, results_type, dataset_options_testing=None):
         self.training_dataset_options = dataset_options_training;
         self.testing_dataset_options = dataset_options_testing;
         self.classifier_options = classifier_options;
@@ -91,11 +92,38 @@ class Results:
         self.filename_options = self._getStrFilenameResults();
 
 
-    def _getStrFilenameResults(self):
-        strFilenameDatasetTraining = self.training_dataset_options.getFilenameOptions();
-        strFilenameDatasetTesting = self.testing_dataset_options.getFilenameOptions();
+    def _getStrFilenameResultsTrain(self):
+        strFilenameDatasetTraining = self.training_dataset_options.getFilenameOptions(filteroptions=True);
+        strFilenameClassifier = self.classifier_options.getFilenameOptions();
+        strFilenameResults = self.results_type + '_' + strFilenameDatasetTraining + '_' + strFilenameClassifier;
+        return strFilenameResults;
+
+
+    def _getStrFilenameResultsEval(self):
+        strFilenameDatasetTraining = self.training_dataset_options.getFilenameOptions(filteroptions=True);
+        strFilenameClassifier = self.classifier_options.getFilenameOptions();
+        strFilenameResults = self.results_type + '_' + strFilenameDatasetTraining + '_' + strFilenameClassifier;
+        return strFilenameResults;
+
+
+    def _getStrFilenameResultsTest(self):
+        strFilenameDatasetTraining = self.training_dataset_options.getFilenameOptions(filteroptions=True);
+        strFilenameDatasetTesting = self.testing_dataset_options.getFilenameOptions(filteroptions=True);
         strFilenameClassifier = self.classifier_options.getFilenameOptions();
         strFilenameResults = self.results_type + '_' + strFilenameDatasetTraining + '_' + strFilenameDatasetTesting + '_' + strFilenameClassifier;
+        return strFilenameResults;
+
+
+    def _getStrFilenameResults(self):
+        if self.results_type == 'train':
+            strFilenameResults = self._getStrFilenameResultsTrain();
+        elif self.results_type == 'eval':
+            strFilenameResults = self._getStrFilenameResultsEval();
+        elif self.results_type == 'test':
+            strFilenameResults = self._getStrFilenameResultsTest();
+        else:
+            print('no valid results type selected...exit')
+            sys.exit();
         return strFilenameResults;
 
 
@@ -164,6 +192,15 @@ class Results:
         for res in self.results_all_runs:
             auc_all.append(res.getAUC())
         return auc_all;
+
+
+    def getFilenameResults(self, results_measure):
+        filename = self.dir_results + self.filename_options + '_' + results_measure + '.txt';
+        return filename;
+
+
+    def getDirResults(self):
+        return self.dir_results;
 
 
     def addResultsSingleRun(self, res):
