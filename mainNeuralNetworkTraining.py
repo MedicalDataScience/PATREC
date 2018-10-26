@@ -42,20 +42,18 @@ from official.utils.misc import model_helpers
 from learning.neuralnet.NeuralNetModel import NeuralNetModel
 from learning.neuralnet.FeatureColumnsPatrec import FeatureColumnsPatrec
 from learning.neuralnet.FeatureColumnsNZ import FeatureColumnsNZ
+from learning.neuralnet.FeatureColumnsNZFusion import FeatureColumnsNZFusion
+from learning.neuralnet.FeatureColumnsPatrecFusion import FeatureColumnsPatrecFusion
 from utils.DatasetOptions import DatasetOptions
-from utils.DatasetOptionsNZ_OLD import DatasetOptionsNZ
-from utils.Dataset import Dataset
 
 
 # hidden_units = [100, 100, 50, 50, 25, 25, 25, 25, 10, 10, 10];
-# hidden_units = [35, 35, 35, 35, 35, 35, 35, 35, 35, 35];
-# hidden_units = [120, 100, 80, 60, 40, 10]
-hidden_units = [100, 80, 40, 40, 40, 10];
-# dropout_rate = 0.15;
-# batch_norm = True;
-# learning_rate = 0.05;
-
-
+# hidden_units = [30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30];
+# hidden_units = [100, 80, 60, 40, 10]
+#hidden_units = [20, 20, 20, 10, 10];
+#hidden_units = [10, 10, 10, 10, 10];
+# hidden_units = [60, 60, 40, 40, 20, 20, 20, 10]
+# hidden_units = [60, 40, 20, 10, 10]
 
 def define_flags():
     """Add supervised learning flags, as well as wide-deep model type."""
@@ -72,61 +70,63 @@ def define_flags():
                             batch_size=160)
 
 
-
 def run_deep(flags_obj):
     """Run Wide-Deep training and eval loop.
     Args:
     flags_obj: An object containing parsed flag values.
     """
     dict_data = {
-        'dir_data':         DIRPROJECT + 'data/',
-        'data_prefix':      'nz',
-        'dataset':          '20122016',
-        'encoding':         'embedding',
-        'featureset':       'standard'
+        'dir_data':             DIRPROJECT + 'data/',
+        'data_prefix':          'patrec',
+        'dataset':              '20122015',
+        'encoding':             'embedding',
+        'newfeatures':          None,
+        'featurereduction':     {'method': 'FUSION'},
+        'grouping':             'verylightgrouping'
     }
     dataset_options = DatasetOptions(dict_data);
-    feature_columns_patrec = FeatureColumnsPatrec(dataset_options=dataset_options)
-    feature_columns_nz = FeatureColumnsNZ(dataset_options=dataset_options);
+    # feature_columns_patrec = FeatureColumnsPatrec(dataset_options=dataset_options)
+    # feature_columns_nz = FeatureColumnsNZ(dataset_options=dataset_options);
 
-    feature_columns = feature_columns_nz;
-    nn = NeuralNetModel(dataset_options, feature_columns, flags_obj, hidden_units);
-    nn.setModelDir()
+    if dict_data['data_prefix'] == 'nz':
+        feature_columns_nz_fusion = FeatureColumnsNZFusion(dataset_options=dataset_options);
+        feature_columns = feature_columns_nz_fusion;
+    elif dict_data['data_prefix'] == 'patrec':
+        feature_columns_patrec_fusion = FeatureColumnsPatrecFusion(dataset_options=dataset_options);
+        feature_columns = feature_columns_patrec_fusion;
+    else:
+        print('unknown data prefix..exit')
+        sys.exit()
 
-    # Clean up the model directory if present
-    if not flags_obj.continue_training:
-        shutil.rmtree(flags_obj.model_dir, ignore_errors=True)
-
-    filenames_dataset = nn.getFilenameDatasets();
-    train_file = filenames_dataset[0];
-    test_file = filenames_dataset[1];
-
-    model = nn.build_estimator()
+    nn = NeuralNetModel(dataset_options, feature_columns, flags_obj, balanced_datasets=True);
+    nn.createDatasets();
+    model = nn.getModel()
+    model_flags = nn.getFlags();
+    print('model dir: ' + str(model_flags.model_dir))
     # Train and evaluate the model every `flags.epochs_between_evals` epochs.
     def train_input_fn():
-        return nn.input_fn(train_file, flags_obj.epochs_between_evals, True, flags_obj.batch_size)
+        return nn.input_fn(model_flags.epochs_between_evals, True, model_flags.batch_size, 'train')
 
     def eval_input_fn():
-        return nn.input_fn(test_file, 1, False, flags_obj.batch_size)
+        return nn.input_fn(1, False, model_flags.batch_size, 'eval')
 
     run_params = {
-      'batch_size': flags_obj.batch_size,
-      'train_epochs': flags_obj.train_epochs,
-      'model_type': 'deep',
+      'batch_size':     model_flags.batch_size,
+      'train_epochs':   model_flags.train_epochs,
+      'model_type':     'deep',
     }
 
-    benchmark_logger = logger.config_benchmark_logger(flags_obj)
+    benchmark_logger = logger.config_benchmark_logger(model_flags)
     benchmark_logger.log_run_info('deep', 'Readmission Patient', run_params)
 
     # Train and evaluate the model every `flags.epochs_between_evals` epochs.
-    for n in range(flags_obj.train_epochs // flags_obj.epochs_between_evals):
-        print('n: ' + str(n))
-        model.train(input_fn=train_input_fn, steps=500)
+    for n in range(model_flags.train_epochs // model_flags.epochs_between_evals):
+        model.train(input_fn=train_input_fn)
         results = model.evaluate(input_fn=eval_input_fn)
         # Display evaluation metrics
         tf.logging.info('Results at epoch %d / %d',
-                        (n + 1) * flags_obj.epochs_between_evals,
-                        flags_obj.train_epochs)
+                        (n + 1) * model_flags.epochs_between_evals,
+                        model_flags.train_epochs)
         tf.logging.info('-' * 60)
 
         for key in sorted(results):
@@ -134,13 +134,12 @@ def run_deep(flags_obj):
 
         benchmark_logger.log_evaluation_result(results)
 
-        if model_helpers.past_stop_threshold(flags_obj.stop_threshold, results['accuracy']):
+        if model_helpers.past_stop_threshold(model_flags.stop_threshold, results['accuracy']):
             break;
 
         # Export the model
         print('export the model?')
-        if n%10==0 and flags_obj.export_dir is not None:
-            print('export model: ' + str(flags_obj.export_dir))
+        if n%10==0 and model_flags.export_dir is not None:
             nn.export_model()
 
 
