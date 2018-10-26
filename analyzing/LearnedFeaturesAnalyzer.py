@@ -2,12 +2,14 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 
+from utils.Dataset import Dataset
+
 class LearnedFeaturesAnalyzer:
 
 
-    def __init__(self, dir_plots_base, options_training_data, options_classifier, dataset_training, num_runs):
-        self.dataset_training = dataset_training;
+    def __init__(self, dir_plots_base, options_training_data, options_classifier, num_runs):
         self.options_training_data = options_training_data;
+        self.dataset_training = Dataset(self.options_training_data);
         self.options_classifier = options_classifier;
         self.dir_plots = self._getDirPlots(dir_plots_base);
         self.num_runs = num_runs;
@@ -82,6 +84,7 @@ class LearnedFeaturesAnalyzer:
         filename = self.dir_plots + 'learnedfeatures_avg_' + self.options_classifier.getFilenameOptions() + '_' + self.options_classifier.filename_options_training_data + '.png';
         print(filename)
         [avg_weights, names] = self._getSortedAvgFeatureWeights(num_features);
+        print('start plotting...')
         index_vec = range(0, num_features);
         fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(15, 7));
         fig.tight_layout()
@@ -89,7 +92,7 @@ class LearnedFeaturesAnalyzer:
         ax = self._createBarPlotForAxesObj(ax, index_vec, avg_weights, names, '');
         plt.draw()
         plt.savefig(filename, format='png');
-        plt.show();
+        print('DONE')
 
 
 

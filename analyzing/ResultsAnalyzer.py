@@ -190,7 +190,7 @@ class ResultsAnalyzer:
             tprs_lower = np.maximum(mean_tpr_values - std_tpr_values, 0)
             mean_auc = res.getMeanAucFprTpr();
             std_auc = res.getStdAucFprTpr();
-            plt.step(mean_fpr_values, mean_tpr_values, c=col, linewidth=2,
+            plt.step(mean_fpr_values, mean_tpr_values, c=col, linewidth=3,
                      label=r'%s (AUC = %0.2f $\pm$ %0.2f)' % (names[k], mean_auc, std_auc));
             if show_std:
                 plt.fill_between(mean_fpr_values, tprs_lower, tprs_upper, color=col, alpha=.2);
@@ -199,7 +199,7 @@ class ResultsAnalyzer:
         plt.ylabel('tpr');
         plt.xlim([0, 1]);
         plt.ylim([0, 1]);
-        plt.legend(loc='lower right');
+        plt.legend(loc='lower right', prop={'size': 14});
         plt.grid(True)
         if title_plot is not None:
             plt.suptitle(title_plot)
