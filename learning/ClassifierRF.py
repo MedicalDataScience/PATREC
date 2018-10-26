@@ -14,6 +14,7 @@ class OptionsRF(BaseOptionsClassifier):
         self.random_state = None;
         self.class_weight = None;
         self.n_jobs = 8;
+        self.warm_start = False;
 
         if options_clf is not None:
             if 'n_estimators' in options_clf.keys():
@@ -26,6 +27,8 @@ class OptionsRF(BaseOptionsClassifier):
                 self.class_weight = options_clf['class_weight'];
             if 'n_jobs' in options_clf.keys():
                 self.n_jobs = options_clf['n_jobs'];
+            if 'warm_start' in options_clf.keys():
+                self.warm_start = options_clf['warm_start'];
         BaseOptionsClassifier.__init__(self, 'rf', dir_models_base, options_filename_dataset_training, self._getFilenameOptionsRF());
         return;
 

@@ -53,7 +53,7 @@ class FeatureColumnsNZ:
         age = tf.feature_column.numeric_column('age_dsch', dtype=tf.float32)
         los = tf.feature_column.numeric_column('los', dtype=tf.float32);
 
-        diag_other = ['DIAG_' + dk for dk in helpers.getDKgrouping()]
+        diag_other = helpers.getDKverylightGrouping()
         other_diag = tf.feature_column.categorical_column_with_vocabulary_list(
             'diag', diag_other
         )
@@ -71,8 +71,8 @@ class FeatureColumnsNZ:
         feature_columns.append(tf.feature_column.embedding_column(categorical_column=facility_type, dimension=2))
         feature_columns.append(tf.feature_column.embedding_column(categorical_column=agency_type, dimension=2))
         feature_columns.append(tf.feature_column.embedding_column(categorical_column=purchaser, dimension=2))
-        feature_columns.append(tf.feature_column.embedding_column(categorical_column=main_diag, dimension=4))
-        feature_columns.append(tf.feature_column.embedding_column(categorical_column=other_diag, dimension=2));
+        feature_columns.append(tf.feature_column.embedding_column(categorical_column=main_diag, dimension=8))
+        feature_columns.append(tf.feature_column.embedding_column(categorical_column=other_diag, dimension=8));
 
         print('len(feature_columns): ' + str(len(feature_columns)));
         return feature_columns;

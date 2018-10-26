@@ -63,12 +63,14 @@ class BaseClassifier:
         self.clf.fit(data, labels);
 
 
-    def predict(self, df, early_readmission_flagname):
-        print('prediction data: ' + str(df.shape))
+    def train_partial(self, df, early_readmission_flagname):
+        print('training data: ' + str(df.shape))
         labels = df[early_readmission_flagname].values;
         data = df.drop(early_readmission_flagname, axis=1).values;
+        self.clf.partial_fit(data, labels);
 
-        predictions = self.clf.predict_proba(data);
+
+    def setResults(self, predictions, labels):
         fpr, tpr, thresholds_fprtpr = metrics.roc_curve(labels, predictions[:, 1]);
         precision, recall, thresholds_pr = metrics.precision_recall_curve(labels, predictions[:, 1]);
         average_precision = metrics.average_precision_score(labels, predictions[:, 1]);
@@ -84,6 +86,14 @@ class BaseClassifier:
         results.thresholds_precision_recall = thresholds_fprtpr;
         results.roc_auc = roc_auc;
         results.calcFMeasure(precision, recall);
+        return results;
+
+    def predict(self, df, early_readmission_flagname):
+        print('prediction data: ' + str(df.shape))
+        labels = df[early_readmission_flagname].values;
+        data = df.drop(early_readmission_flagname, axis=1).values;
+        predictions = self.clf.predict_proba(data);
+        results = self.setResults(predictions, labels);
         return results;
 
 
