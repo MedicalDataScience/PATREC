@@ -7,6 +7,8 @@ from shutil import copy2
 
 from helpers.helpers import getCHOPgrouping
 from helpers.helpers import getDKgrouping
+from helpers.helpers import getDKlightGrouping
+from helpers.helpers import getDKverylightGrouping
 from helpers.helpers import getOEgrouping
 
 
@@ -22,7 +24,15 @@ class DataGrouper:
             group_names = getCHOPgrouping();
             group_names.insert(0, 'Fall');
         elif group == 'DK':
-            group_names = getDKgrouping();
+            if self.options.getGroupingName() == 'grouping':
+                group_names = getDKgrouping();
+            elif self.options.getGroupingName() == 'lightgrouping':
+                group_names = getDKlightGrouping();
+            elif self.options.getGroupingName() == 'verylightgrouping':
+                group_names = getDKverylightGrouping();
+            else:
+                print('grouping scheme ist not known...exit')
+                sys.exit();
             group_names.insert(0, 'Fall');
         elif group == 'OE':
             group_names = getOEgrouping();
@@ -51,6 +61,18 @@ class DataGrouper:
         copy2(filename_data_in, filename_data_out);
 
 
+    def _getDKendIndex(self):
+        if self.options.getGroupingName() == 'grouping':
+            return 4;
+        elif self.options.getGroupingName() == 'lightgrouping':
+            return 5;
+        elif self.options.getGroupingName() == 'verylightgrouping':
+            return 6;
+        else:
+            print('grouping scheme ist not known...exit')
+            sys.exit();
+
+
     def __groupFeautureSubgroupNormal(self, strGroup):
         print('grouping: ' + str(strGroup))
         dir_data = self.options.getDirData();
@@ -73,6 +95,7 @@ class DataGrouper:
         for k, h in enumerate(headers_data):
             headers_data_indices.append(headers_data.index(h));
 
+        dk_end_index = self._getDKendIndex();
         data_reader = pd.read_csv(filename_data_in, usecols=headers_data_indices, chunksize=chunksize);
 
         for k, chunk in enumerate(data_reader):
@@ -88,7 +111,7 @@ class DataGrouper:
                     chunk[h_new] = 0.0;
                     if strGroup == 'DK':
                         for h_old in headers_data:
-                            if h_old[3:4] == h_new:  # depends on grouping to apply: CAREFUL
+                            if h_old[3:dk_end_index] == h_new:  # depends on grouping to apply: CAREFUL
                                 chunk[h_new] = (chunk[h_new].astype(int) | chunk[h_old].astype(int)).astype(int);
                         chunk_new[h_new] = chunk[h_new];
                     if strGroup == 'CHOP':
@@ -110,7 +133,7 @@ class DataGrouper:
 
     def groupFeatures(self):
         grouping = self.options.getGroupingName();
-        assert(grouping == 'grouping', 'the only implemented scheme is normal grouping...')
+        # assert(grouping == 'grouping', 'the only implemented scheme is normal grouping...')
         subgroups = self.options.getSubgroups();
         for subgroup in subgroups:
             self.__groupFeautureSubgroupNormal(subgroup);

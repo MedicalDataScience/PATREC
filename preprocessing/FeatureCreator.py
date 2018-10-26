@@ -9,18 +9,21 @@ class FeatureCreator:
         self.options = options_dataset;
         self.filename_options_in = filename_options_in;
         self.filename_options_out = filename_options_out;
-        self.additional_features = self.options.getFeatureSetOptions()['names_new_features'];
+        self.additional_features = self.options.getNewFeatureSettings()['names'];
         return;
 
 
     def __getFilenameOptionStr(self):
         dataset = self.options.getDatasetName();
+        name_dem_features = self.options.getFilenameOptionDemographicFeatures();
+
         if self.filename_options_in is None or self.filename_options_out is None:
             print('filename options must not be None: ')
             print('filename_options_in: '  + str(self.filename_options_in))
             print('filename_options_out: ' + str(self.filename_options_out))
-        strFilenameIn = dataset + '_REST_' + self.filename_options_in;
-        strFilenameOut = dataset + '_REST_' + self.filename_options_out;
+
+        strFilenameIn = dataset + '_' + name_dem_features + '_' + self.filename_options_in;
+        strFilenameOut = dataset + '_' + name_dem_features + '_' + self.filename_options_out;
         return [strFilenameIn, strFilenameOut]
 
 

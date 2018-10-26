@@ -11,6 +11,7 @@ import helpers.helpers as helpers
 import helpers.constantsNZ as constants
 from helpers.icd_conversion_helper import ICDConversionHelper
 
+from preprocessing.FeatureSetCreator import FeatureSetCreator
 from preprocessing.FeatureEncoder import FeatureEncoder
 from preprocessing.DataPreparer import DataPreparer
 
@@ -27,9 +28,9 @@ class PreprocessorNZ():
         ret_list.append(constants.DIAGNOSIS_COUNT)
 
         if header_mode == constants.HEADER_MODE_COMPRESS:
-            dk_grouping = helpers.getDKgrouping();
+            dk_grouping = helpers.getDKverylightGrouping();
             for dk in dk_grouping:
-                ret_list.append(constants.DIAGNOSIS_PREFIX + str(dk))
+                ret_list.append(str(dk))
         # # Always append main diagnosis columns
         # for code in range(ord("A"), ord("Z") + 1):
         #     # ret_list.append(constants.DIAGNOSIS_PREFIX + chr(code) + constants.DIAGNOSIS_MAIN)
@@ -127,25 +128,18 @@ class PreprocessorNZ():
                 # If header mode is compressed
                 if header_mode == constants.HEADER_MODE_COMPRESS:
                     # Get the first two characters of the clin_cd value
-                    code_letter = clin_cd[0]
-                    code_first_number = clin_cd[1]
+                    code_grouping = clin_cd[:3]
 
                     # Increment the associated fields
-                    if diag_typ == constants.DIAG_TYP_MAIN:
-                        # curr_disc_df.at[disc_index, "{}{}{}".format(constants.DIAGNOSIS_PREFIX, code_letter, constants.DIAGNOSIS_MAIN)] += 1
-                        continue;
-                    else:
-                        curr_disc_df.at[disc_index, "{}{}".format(constants.DIAGNOSIS_PREFIX, code_letter)] = 1
+                    if diag_typ != constants.DIAG_TYP_MAIN:
+                        curr_disc_df.at[disc_index, "{}".format(code_grouping)] = 1
                 else:
                     # Only use the first character to determine the main diagnosis type
                     code_letter = clin_cd[0]
 
                     # Increment the associated fields
-                    if diag_typ == constants.DIAG_TYP_MAIN:
-                        # curr_disc_df.at[disc_index, "{}{}{}".format(constants.DIAGNOSIS_PREFIX, code_letter, constants.DIAGNOSIS_MAIN)] += 1
-                        continue;
-                    else:
-                        curr_disc_df.at[disc_index, "{}{}".format(constants.DIAGNOSIS_PREFIX, clin_cd)] = 1
+                    if diag_typ != constants.DIAG_TYP_MAIN:
+                        curr_disc_df.at[disc_index, "{}".format(clin_cd)] = 1
 
                 curr_disc_df.at[disc_index, constants.DIAGNOSIS_COUNT] += 1
 
@@ -187,7 +181,13 @@ class PreprocessorNZ():
 
 
     def processDiagnosisFile(self):
+        dir_data = self.options.getDirData();
         dataset = self.options.getDatasetName();
+        grouping = self.options.getGroupingName();
+        data_prefix = self.options.getDataPrefix();
+        filename_out = dir_data + 'data_' + data_prefix + '_' + dataset + '_diag_' + grouping + '.csv';
+
+        print('filename_out: ' + str(filename_out))
 
         print("main : Processing year {}".format(dataset))
         curr_discharge_file = constants.DISCHARGE_FILE_TEMPLATE.format(dataset)
@@ -207,8 +207,6 @@ class PreprocessorNZ():
         # Add the additional columns to the table, default the value to zero
         for col in additional_columns:
             curr_disc_df[col] = 0;
-
-        print(list(curr_disc_df.columns))
 
         # Split discharge data frame into parts for multiprocessing
         curr_disc_df_split = np.array_split(curr_disc_df, constants.NUM_FRACTIONS)
@@ -249,16 +247,18 @@ class PreprocessorNZ():
 
             pbar.close()
 
-        print("main : Done processing diagnoses for year {}".format(dataset))
-        print('curr_diag_df: ' + str(curr_disc_df.shape));
         curr_diag_df = curr_disc_df;
+        print(list(curr_diag_df.columns))
+        print("main : Done processing diagnoses for year {}".format(dataset))
+        print('curr_diag_df: ' + str(curr_diag_df.shape));
 
-        dir_data = self.options.getDirData();
-        dataset = self.options.getDatasetName();
-        grouping = self.options.getGroupingName();
-        data_prefix = self.options.getDataPrefix();
-        filename_out = dir_data + 'data_' + data_prefix + '_' + dataset + '_diag_' + grouping + '.csv';
-        curr_diag_df.to_csv(filename_out);
+        chunksize = self.options.getChunkSize()
+        list_df = [curr_diag_df[i:i + chunksize] for i in range(0, curr_diag_df.shape[0], chunksize)]
+        list_df[0].to_csv(filename_out, index=False)
+        for l in list_df[1:]:
+            l.to_csv(filename_out, index=False, header=False, mode='a')
+
+        # curr_diag_df.to_csv(filename_out, line_terminator='\n', index=False);
 
 
 
@@ -299,11 +299,15 @@ class PreprocessorNZ():
         curr_disc_df.to_csv(filename_out);
 
 
+    def createFeatureSet(self):
+        featureset_creator = FeatureSetCreator(self.options, filename_options_in=None);
+        featureset_creator.createFeatureSet();
+
 
     def encodeFeatures(self):
         encoder = FeatureEncoder(self.options);
-        encoder.encodeFeaturesNZ();
+        encoder.encodeFeatures();
 
     def fuse(self):
         preparer = DataPreparer(self.options);
-        preparer.fuseSubgroupsNZ();
+        preparer.fuseSubgroups();

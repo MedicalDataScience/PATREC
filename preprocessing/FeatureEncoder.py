@@ -10,18 +10,17 @@ class FeatureEncoder:
 
     def __init__(self, options_dataset):
         self.options = options_dataset;
-        self.filename_options_in = self.options.getFeatureSet();
+        self.filename_options_in = self.options.getFeatureSetStr();
         return;
 
     def __prepareHauptdiagnose(self, valStr):
-        return valStr[:2];
+        return valStr[:3];
 
     def __prepareMDC(self, valStr):
         return str(valStr)[0];
 
     def __prepareOE(self, valStr):
         return str(int(valStr));
-
 
     # def __categorizeBinary(self, df, featurename, feature_values):
     #     new_headers = [];
@@ -60,25 +59,16 @@ class FeatureEncoder:
         return df_new;
 
 
-    def __categorizeValues(self, df, featurename):
-        group_values = self.options.getFeatureCategories(featurename);
-        df_new = self.__categorizeMulti(df, featurename, group_values);
-        # if len(group_values) == 2:
-        #     df_new = self.__categorizeBinary(df, featurename, group_values)
-        # elif len(group_values) > 2:
-        #     df_new = self.__categorizeMulti(df, featurename, group_values);
-        # else:
-        #     print('there should not exist a feature with a number of categories smaller than 2...exit')
-        #     sys.exit()
-        return df_new;
-
     def __encodeCategoricalFeatures(self, df):
         categorical_features = self.options.getCategoricalFeatures();
+        column_names = list(df.columns);
         for feat in sorted(categorical_features):
-            print('encode feature: ' + str(feat));
-            df_new = self.__categorizeValues(df, feat);
-            df = pd.concat([df, df_new], axis=1);
-            df = df.drop(feat, axis=1);
+            if feat in column_names:
+                print('encode feature: ' + str(feat));
+                group_values = self.options.getFeatureCategories(feat);
+                df_new = self.__categorizeMulti(df, feat, group_values);
+                df = pd.concat([df, df_new], axis=1);
+                df = df.drop(feat, axis=1);
         print('df: ' + str(df.shape))
         return df;
 
@@ -131,8 +121,9 @@ class FeatureEncoder:
         dir_data = self.options.getDirData();
         data_prefix = self.options.getDataPrefix();
         dataset = self.options.getDatasetName();
+        name_dem_features = self.options.getFilenameOptionDemographicFeatures();
         print('encode features: ' + str(encoding))
-        strFilename_in = dataset + '_REST_' + self.filename_options_in;
+        strFilename_in = dataset + '_' + name_dem_features + '_' + self.filename_options_in;
         strFilename_out = strFilename_in + '_' + encoding;
         filename_data_in = dir_data + 'data_' + data_prefix + '_' + strFilename_in + '.csv';
         filename_data_out = dir_data + 'data_' + data_prefix + '_' + strFilename_out + '.csv';
@@ -153,28 +144,33 @@ class FeatureEncoder:
         df.to_csv(filename_data_out, line_terminator='\n', index=False);
 
 
-    def encodeFeaturesNZ(self):
-        encoding = self.options.getEncodingScheme();
-        assert encoding is not None, 'an encoding algorithm has to be selected..exit';
-        assert encoding in ['categorical', 'binary', 'embedding'], 'feature encoding scheme is not known...please select one of the following: categorical, binary, embedding';
-
-        dir_data = self.options.getDirData();
-        data_prefix = self.options.getDataPrefix();
-        dataset = self.options.getDatasetName();
-        filename_data_in = dir_data + 'data_' + data_prefix + '_' + dataset + '_discharge.csv';
-        filename_data_out = dir_data + 'data_' + data_prefix + '_' + dataset + '_discharge_' + encoding + '.csv';
-        df = pd.read_csv(filename_data_in);
-        df = self.__preprocessFeatureEncoding(df);
-
-        if encoding == 'categorical' or encoding == 'binary':
-            df = self.__encodeCategoricalFeatures(df);
-            if encoding == 'binary':
-                binarizable_features = self.options.getCountFeaturesToBinarize();
-                for bin_feat in binarizable_features:
-                    df = self.__encodeBinarizableFeature(df, bin_feat);
-        else:
-            print('encoding scheme is not known... no encoding applied')
-
-        print('encoded: df.shape: ' + str(df.shape))
-        df.to_csv(filename_data_out, line_terminator='\n', index=False);
+    # def encodeFeaturesNZ(self):
+    #     encoding = self.options.getEncodingScheme();
+    #     assert encoding is not None, 'an encoding algorithm has to be selected..exit';
+    #     assert encoding in ['categorical', 'binary', 'embedding'], 'feature encoding scheme is not known...please select one of the following: categorical, binary, embedding';
+    #
+    #     dir_data = self.options.getDirData();
+    #     data_prefix = self.options.getDataPrefix();
+    #     dataset = self.options.getDatasetName();
+    #     name_dem_features = self.options.getFilenameOptionDemographicFeatures();
+    #
+    #     strFilename_in = dataset + '_' + name_dem_features + '_' + self.filename_options_in;
+    #     strFilename_out = strFilename_in + '_' + encoding;
+    #     filename_data_in = dir_data + 'data_' + data_prefix + '_' + strFilename_in + '.csv';
+    #     filename_data_out = dir_data + 'data_' + data_prefix + '_' + strFilename_out + '.csv';
+    #
+    #     df = pd.read_csv(filename_data_in);
+    #     df = self.__preprocessFeatureEncoding(df);
+    #
+    #     if encoding == 'categorical' or encoding == 'binary':
+    #         df = self.__encodeCategoricalFeatures(df);
+    #         if encoding == 'binary':
+    #             binarizable_features = self.options.getCountFeaturesToBinarize();
+    #             for bin_feat in binarizable_features:
+    #                 df = self.__encodeBinarizableFeature(df, bin_feat);
+    #     else:
+    #         print('encoding scheme is not known... no encoding applied')
+    #
+    #     print('encoded: df.shape: ' + str(df.shape))
+    #     df.to_csv(filename_data_out, line_terminator='\n', index=False);
 
