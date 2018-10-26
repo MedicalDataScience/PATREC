@@ -27,6 +27,7 @@ class Dataset:
             self._filterData();
         else:
             filename = self.options.getFilename()
+            print(filename)
             df = pd.read_csv(filename);
             self.df = df;
     
@@ -44,11 +45,13 @@ class Dataset:
 
     def _removeNotNeededColumns(self):
         not_needed_columns = self.options.getColumnsToRemove();
+        columns_data = list(self.data.columns);
         for col in not_needed_columns:
-            try:
-                self.data = self.data.drop(col, axis=1);
-            except ValueError:
-                pass;
+            if col in columns_data:
+                try:
+                    self.data = self.data.drop(col, axis=1);
+                except ValueError or KeyError:
+                    pass;
 
 
     def _normalizeNumericalColumns(self):
@@ -69,6 +72,49 @@ class Dataset:
         self._removeNotNeededColumns();
         if self.options.getEncodingScheme() == 'categorical':
             self._normalizeNumericalColumns();
+
+
+    def _splitData(self):
+        if self.data is None:
+            self.getData();
+
+        early_readmission_flagname = self.options.getEarlyReadmissionFlagname();
+        df_pos = self.data.loc[self.data[early_readmission_flagname] == 1]
+        df_neg = self.data.loc[self.data[early_readmission_flagname] == 0]
+        df_pos = df_pos.sample(frac=1);
+        df_neg = df_neg.sample(frac=1);
+        return [df_pos, df_neg];
+
+
+    def _getBalancedSubset(self):
+        [df_pos, df_neg] = self._splitData();
+        num_pos_samples = df_pos.shape[0];
+        num_neg_samples = df_neg.shape[0];
+        min_num_samples = int(np.min([num_pos_samples, num_neg_samples]));
+        df_pos_balanced = df_pos[:min_num_samples];
+        df_neg_balanced = df_neg[:min_num_samples];
+        return [df_pos_balanced, df_neg_balanced];
+
+
+    def _getTrainingTesting(self):
+        ratio_training_samples = self.options.getRatioTrainingSamples();
+
+        [df_pos, df_neg] = self._splitData();
+        num_pos_samples = df_pos.shape[0];
+        num_pos_samples_training = int(round(ratio_training_samples * num_pos_samples));
+        num_pos_samples_testing = num_pos_samples - num_pos_samples_training;
+
+        df_pos_training = df_pos.iloc[:num_pos_samples_training, :];
+        df_pos_testing = df_pos.iloc[num_pos_samples_training:, :];
+        print('df_pos_training: ' + str(df_pos_training.shape))
+        print('df_pos_testing: ' + str(df_pos_testing.shape))
+        df_neg_testing = df_neg.iloc[:num_pos_samples_testing, :];
+        df_neg_training = df_neg.iloc[num_pos_samples_testing:, :];
+        print('df_neg_training: ' + str(df_neg_training.shape))
+        print('df_neg_testing: ' + str(df_neg_testing.shape))
+        training = [df_pos_training, df_neg_training];
+        testing = [df_pos_testing, df_neg_testing];
+        return [training, testing]
 
 
     def getColumnsDf(self):
@@ -107,23 +153,6 @@ class Dataset:
         return self.options.getFilenameOptions(filteroptions);
 
 
-    def _getBalancedSubset(self):
-        if self.data is None:
-            self.getData();
-
-        early_readmission_flagname = self.options.getEarlyReadmissionFlagname();
-        df_pos = self.data.loc[self.data[early_readmission_flagname] == 1]
-        df_neg = self.data.loc[self.data[early_readmission_flagname] == 0]
-        df_pos = df_pos.sample(frac=1);
-        df_neg = df_neg.sample(frac=1);
-        num_pos_samples = df_pos.shape[0];
-        num_neg_samples = df_neg.shape[0];
-        min_num_samples = int(np.min([num_pos_samples, num_neg_samples]));
-        df_pos_balanced = df_pos[:min_num_samples];
-        df_neg_balanced = df_neg[:min_num_samples];
-        return [df_pos_balanced, df_neg_balanced];
-
-
     def getBalancedSubsetTrainingAndTesting(self):
 
         [df_pos, df_neg] = self._getBalancedSubset();
@@ -143,6 +172,11 @@ class Dataset:
         df_balanced_testing = df_balanced_testing.sample(frac=1);
 
         return [df_balanced_training, df_balanced_testing];
+
+
+    def getTrainingAndTestingSet(self):
+        [training, testing] = self._getTrainingTesting();
+        return [training, testing]
 
 
     def getBalancedSubSet(self):

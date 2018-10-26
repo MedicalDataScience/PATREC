@@ -12,10 +12,10 @@ class DatasetSplitter:
 
     def __getFilenameOptionStr(self):
         dataset = self.options.getDatasetName();
-        featureset = self.options.getFeatureSet();
+        feauture_set_str = self.options.getFeatureSetStr();
         encoding = self.options.getEncodingScheme();
         grouping = self.options.getGroupingName();
-        filename_options_in = featureset + '_' + encoding + '_' + grouping;
+        filename_options_in = feauture_set_str + '_' + encoding + '_' + grouping;
 
         if filename_options_in is None:
             print('filename options must not be None: ')
@@ -54,6 +54,7 @@ class DatasetSplitter:
         training = [df_pos_training, df_neg_training];
         testing = [df_pos_testing, df_neg_testing];
         return [training, testing]
+
 
     def __splitDataTrainingTestingBalanced(self, df):
         ratio_training_samples = self.options.getRatioTrainingSamples();
@@ -135,12 +136,19 @@ class DatasetSplitter:
         testing[1].to_csv(filename_data_out_neg_testing, line_terminator='\n', index=False);
         testing[0].to_csv(filename_data_out_pos_testing, line_terminator='\n', index=False);
 
+        filename_training_all = dir_data + 'data_' + data_prefix + '_' + filename_option_str + '_training.csv';
+        filename_testing_all = dir_data + 'data_' + data_prefix + '_' + filename_option_str + '_testing.csv';
+        df_training = training[0].append(training[1]);
+        df_training = df_training.sample(frac=1);
+        df_testing = testing[0].append(testing[1]);
+        df_testing = df_testing.sample(frac=1);
+        df_training.to_csv(filename_training_all, line_terminator='\n', index=False);
+        df_testing.to_csv(filename_testing_all, line_terminator='\n', index=False);
+
 
     def __splitDatasetIntoTrainingTestingBalanced(self, df):
         dir_data = self.options.getDirData();
         data_prefix = self.options.getDataPrefix();
-
-
 
         filename_option_str = self.__getFilenameOptionStr()
         [training, testing] = self.__splitDataTrainingTestingBalanced(df);
@@ -162,11 +170,13 @@ class DatasetSplitter:
         filename_data_in = dir_data + 'data_' + data_prefix + '_' + filename_option_str + '.csv';
         df = pd.read_csv(filename_data_in);
         colums_to_remove = self.options.getColumnsToRemove();
+        columns_df = list(df.columns);
         for col in colums_to_remove:
-            try:
-                df = df.drop(col, axis=1);
-            except ValueError:
-                pass;
+            if col in columns_df:
+                try:
+                    df = df.drop(col, axis=1);
+                except KeyError:
+                    pass;
 
         self.__splitDatasetIntoTrainingTestingAll(df);
         self.__splitDatasetIntoTrainingTestingBalanced(df);

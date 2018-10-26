@@ -11,8 +11,8 @@ class BaseDatasetOptions:
         self.features_categorical = None;
 
         self.subgroups = None;
-        self.featureset = None;
-        self.options_featureset = None;
+        self.newfeatures = None;
+        self.featurereduction = None;
         self.grouping = None;
         self.options_grouping = None;
         self.encoding = None;
@@ -28,9 +28,7 @@ class BaseDatasetOptions:
 
     def _getFilenameOptions(self, filteroptions):
         str = self.data_prefix + '_' + self.dataset;
-        str = str + '_' + self.featureset;
-        # if self.options_featureset is not None:
-        #    str = str + self.options_featureset;
+        str = str + '_' + self.getFeatureSetStr()
 
         str = str + '_' + self.encoding;
         if self.options_encoding is not None:
@@ -73,14 +71,6 @@ class BaseDatasetOptions:
         return self.grouping;
 
 
-    def getFeatureSet(self):
-        return self.featureset;
-
-
-    def getFeatureSetOptions(self):
-        return self.options_featureset;
-
-
     def getEncodingScheme(self):
         return self.encoding;
 
@@ -106,6 +96,27 @@ class BaseDatasetOptions:
         if self.filename is None:
             self.filename = self._getFilename();
         return self.filename;
+
+    def getNewFeatureSettings(self):
+        return self.newfeatures;
+
+    def getFeatureReductionSettings(self):
+        return self.featurereduction;
+
+    def getFeatureSetStr(self):
+        if self.newfeatures is None and self.featurereduction is None:
+            str = 'standard';
+        else:
+            if self.newfeatures is not None and self.featurereduction is not None:
+                str = 'newfeatures_reduction_' + self.featurereduction['method'];
+            elif self.newfeatures is not None:
+                str = 'newfeatures';
+            elif self.featurereduction is not None:
+                str = 'reduction_' + self.featurereduction['method'];
+            else:
+                print('this should not happen...exit')
+                sys.exit();
+        return str;
 
 
     def getCategoricalFeatures(self):

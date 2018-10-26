@@ -15,8 +15,8 @@ class DatasetOptions(BaseDatasetOptions):
 
         self.features_categorical = self._getCategoricalFeatures();
         self.subgroups = self._getSubgroups();
-        self.featureset = 'newfeatures';
-        self.options_featureset = {'names_new_features': self._getNamesNewFeatures()};
+        self.newfeatures = None;
+        self.featurereduction = None;
         self.grouping = 'grouping';
         self.options_grouping = None;
         self.encoding = 'categorical';
@@ -32,10 +32,10 @@ class DatasetOptions(BaseDatasetOptions):
                 self.ratio_training_samples = options['ratio_training_samples'];
             if 'subgroups'  in options.keys():
                 self.subgroups = options['subgroups'];
-            if 'featureset' in options.keys():
-                self.featureset = options['featureset'];
-            if 'options_featureset'  in options.keys():
-                self.options_featureset = options['options_featureset'];
+            if 'newfeatures' in options.keys():
+                self.newfeatures = options['newfeatures'];              #self.newfeatures = {'names': self._getNamesNewFeatures()};
+            if 'featurereduction' in options.keys():
+                self.featurereduction = options['featurereduction'];    #self.reduction = {'method': self._getNamesNewFeatures()}
             if 'grouping' in options.keys():
                 self.grouping = options['grouping'];
             if 'options_grouping' in options.keys():
@@ -108,6 +108,33 @@ class DatasetOptions(BaseDatasetOptions):
             return constantsPATREC.ADMIN_FEATURES_NAMES.copy();
         elif self.data_prefix == 'nz':
             return constantsNZ.ADMIN_FEATURES_NAMES.copy();
+
+
+    def getLiegestatusFeatureNames(self):
+        if self.data_prefix == 'patrec':
+            return constantsPATREC.LIEGESTATUS_FEATURES.copy();
+        else:
+            print('no LIEGESTATUS defined for this dataset...')
+            return [];
+
+    def getFilenameOptionDemographicFeatures(self):
+        if self.data_prefix == 'patrec':
+            return constantsPATREC.NAME_DEMOGRAPHIC_FEATURE;
+        elif self.data_prefix == 'nz':
+            return constantsNZ.NAME_DEMOGRAPHIC_FEATURE;
+        else:
+            print('there does not exist yet any demographic information for this dataset..exit')
+            sys.exit();
+
+    def getFusionFeatureNames(self):
+        if self.data_prefix == 'patrec':
+            return constantsPATREC.FUSION_FEATURES.copy();
+        elif self.data_prefix == 'nz':
+            return constantsNZ.FUSION_FEATURES.copy();
+        else:
+            print('no FUSION features for this dataset yet...')
+            sys.exit();
+
 
     def getColumnsToRemove(self):
         if self.data_prefix == 'patrec':

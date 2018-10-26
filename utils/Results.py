@@ -215,7 +215,7 @@ class Results:
         filename_fpr = self.dir_results + self.filename_options + '_fpr.txt';
         filename_auc = self.dir_results + self.filename_options + '_auc.txt';
         filename_avgprecision = self.dir_results + self.filename_options + '_avgprecision.txt';
-
+        
         precision = self._getPrecisionAllRuns();
         recall = self._getRecallAllRuns();
         fmeasure = self._getFMeasureAllRuns();
