@@ -25,6 +25,13 @@ def getDKlightGrouping():
             group_headers.append(string.ascii_uppercase[k] + str(l));
     return group_headers.copy();
 
+def getDKverylightGrouping():
+    group_headers = [];
+    for k in range(0, 26):  # number of characters in the alphabet --> number of dk groups
+        for l in range(0, 100):
+            group_headers.append(string.ascii_uppercase[k] + str(l).zfill(2));
+    return group_headers.copy();
+
 def getDRGgrouping():
     group_headers = [];
     for k in range(0, 26):  # number of characters in the alphabet --> number of dk groups

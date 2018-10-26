@@ -7,8 +7,12 @@ YEARS_TO_PROCESS = ["1988", "1989", "1990", "1991", "1992", "1993", "1994", "199
 
 DISCHARGE_FILE_TEMPLATE = '/Users/towyku74/UniBas/sciCore/projects/PATREC/nz/data_src/pus10175_discharge_readmit_{}.txt'
 DIAGNOSIS_FILE_TEMPLATE = '/Users/towyku74/UniBas/sciCore/projects/PATREC/nz/data_src/pus10175_diagnosis_{}.txt'
-OUTPUT_DIR = '/scicore/home/vogtju/towyku74/projects/PATREC/nz/data_prepared/'
+#DISCHARGE_FILE_TEMPLATE = '/Users/thomas/UniBas/sciCore/projects/PATREC/nz/data_src/pus10175_discharge_readmit_{}.txt'
+#DIAGNOSIS_FILE_TEMPLATE = '/Users/thomas/UniBas/sciCore/projects/PATREC/nz/data_src/pus10175_diagnosis_{}.txt'
+# DISCHARGE_FILE_TEMPLATE = '/scicore/home/vogtju/towyku74/projects/PATREC/nz/data_src/pus10175_discharge_readmit_{}.txt'
+# DIAGNOSIS_FILE_TEMPLATE = '/scicore/home/vogtju/towyku74/projects/PATREC/nz/data_src/pus10175_diagnosis_{}.txt'
 
+OUTPUT_DIR = '/scicore/home/vogtju/towyku74/projects/PATREC/nz/data_prepared/'
 # For debugging
 #OUTPUT_DIR = os.path.dirname(os.path.abspath(inspect.stack()[0][1])) + '/NZ/data/'
 #DISCHARGE_FILE_TEMPLATE = OUTPUT_DIR + 'raw/pus10175_discharge_readmit_{}.txt'
@@ -24,7 +28,7 @@ DIAG_TYP_OTHER = "B"
 DIAG_TYPE_EXTERNAL = "E"
 DIAG_TYPE_OPERATION = "O"
 
-CLIN_SYS_ICD9 = 6
+CLIN_SYS_ICD9 = 1
 CLIN_SYS_ICD10_6 = 13
 CLIN_SYS_ICD10_8 = 14
 
@@ -46,7 +50,7 @@ CATEGORICAL_DATA['purchaser'] = ['6', '17', '19', '20', '33', '34', '35', '55', 
 CATEGORICAL_DATA['Short_Stay_ED_Flag'] = ['N', 'Y']
 #CATEGORICAL_DATA['early_readmission_flag'] = ['N', 'Y']
 CATEGORICAL_DATA['transfer_event_flag'] = ['N', 'Y']
-CATEGORICAL_DATA['main_diag'] = helpers.getDKlightGrouping();
+CATEGORICAL_DATA['main_diag'] = helpers.getDKverylightGrouping();
 
 EXPLICIT_DATA_TYPES = {'gender': str, 'adm_src': str, 'adm_type': str, 'event_type': str, 'end_type': str,
                        'facility_type': str, 'agency_type': str, 'private_flag': str, 'purchaser': str,
@@ -63,6 +67,10 @@ EVENT_FLAG = 'event_id';
 NUMERICAL = ['los', 'age_dsch'];
 
 COLUMNS_TO_REMOVE_FOR_CLASSIFIER = ['unique_patient_identifier', 'event_id']
+
+FUSION_FEATURES = ['event_id', 'age_dsch', 'gender', 'los', 'main_diag']
+
+NAME_DEMOGRAPHIC_FEATURE = 'discharge';
 
 
 NEW_FEATURES = ['previous_visits', 'ratio_los_age', 'ratio_numDK_age', 'ratio_los_numDK', 'ratio_numCHOP_age',

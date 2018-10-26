@@ -28,7 +28,7 @@ CATEGORICAL['Aufnahmejahr'] = ['2011', '2012', '2013', '2014', '2015', '2016', '
 CATEGORICAL['Liegestatus'] = ['kurz', 'norm', 'lang', 'vap', 'opti', 'unb'];
 CATEGORICAL['Geschlecht'] = ['weiblich', 'maennlich'];
 CATEGORICAL['Forschungskonsent'] = ['ein', 'unb'];
-CATEGORICAL['Hauptdiagnose'] = helpers.getDKlightGrouping();
+CATEGORICAL['Hauptdiagnose'] = helpers.getDKverylightGrouping();
 CATEGORICAL['AufnehmOE'] = helpers.getOEgrouping();
 CATEGORICAL['EntlassOE'] = helpers.getOEgrouping();
 CATEGORICAL['DRGCode'] = helpers.getDRGgrouping()
@@ -43,16 +43,26 @@ NEW_FEATURES = ['previous_visits', 'ratio_los_age', 'ratio_numDK_age', 'ratio_lo
                     'ratio_los_numOE', 'ratio_numOE_age', 'mult_los_numCHOP', 'mult_equalOE_numDK',
                     'ratio_drg_los_alos'];
 
+NEW_FEATURES_FUSION = ['ratio_los_age', 'ratio_numDK_age', 'ratio_los_numDK' ];
+
+
 
 ADMIN_FEATURES_NAMES = ['Fall', 'Aufnahmeart', 'Aufnahmedatum', 'Entlassdatum', 'Aufnahmejahr', 'Entlassjahr',
                         'Aufnahmemonat', 'Entlassmonat', 'Aufnahmetag', 'Entlasstag', 'Wiederkehrer', 'Eintrittsalter',
                         'Eintrittsart', 'Entlassart', 'EntlassBereich', 'Versicherungsklasse', 'Patient',
                         'Forschungskonsent', 'Geschlecht', 'Verweildauer', 'Liegestatus', 'Langlieger']
 
+LIEGESTATUS_FEATURES = ['Liegestatus', 'Langlieger']
+
+FUSION_FEATURES = ['Fall', 'Geschlecht', 'Eintrittsalter', 'Hauptdiagnose', 'Verweildauer'] + NEW_FEATURES_FUSION;
+
+
 MDC = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z', '9'];
 
 COLUMNS_TO_REMOVE_FOR_CLASSIFIER = ['Fall', 'Aufnahmedatum', 'Entlassdatum', 'Patient']
 
+
+NAME_DEMOGRAPHIC_FEATURE = 'REST';
 
 ################################################
 #
