@@ -122,9 +122,13 @@ def predict(flags_obj):
         print('unknown data prefix..exit')
         sys.exit()
 
-    nn = NeuralNetModel(dataset_options_testing, feature_columns, flags_obj);
+    dict_dataset_options = {
+        'train':        dataset_options_training,
+        'eval':         None,
+        'test':         dataset_options_testing
+    }
 
-    model = nn.getModel('test');
+    nn = NeuralNetModel('test', dict_dataset_options, feature_columns, flags_obj);
     model_flags = nn.getFlags();
 
     if model_flags.model_dir.endswith('/'):
@@ -152,21 +156,15 @@ def predict(flags_obj):
 
     options_nn = OptionsNN(model_flags.model_dir, dataset_options_training, options_clf=dict_options_nn);
     classifier_nn = ClassifierNN(options_nn)
-    results_all_runs_test = Results(dirResultsBase, dataset_options_training, options_nn, 'test',
-                                    dataset_options_testing);
-
-    def test_input_fn():
-        print('test input fn')
-        return nn.input_fn(1, False, flags_obj.batch_size, 'test');
+    results_all_runs_test = Results(dirResultsBase, dataset_options_training, options_nn, 'test', dataset_options_testing);
 
     num_runs = 10;
     test_auc = [];
     test_avgprecision = [];
     for k in range(0, num_runs):
-        nn.createDatasets('test');
-        results = model.predict(input_fn=test_input_fn)
+        results = nn.predict();
 
-        filename_data_testing = nn.getFilenameDatasetBalanced('test');
+        filename_data_testing = nn.getFilenameDatasetBalanced();
         df_testing_balanced = pd.read_csv(filename_data_testing);
 
         predictions = [p['probabilities'] for p in results];

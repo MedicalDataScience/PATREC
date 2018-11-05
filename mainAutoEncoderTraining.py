@@ -39,10 +39,8 @@ from official.utils.logs import logger
 from official.utils.misc import model_helpers
 
 
-from learning.neuralnet.NeuralNetModel import NeuralNetModel
-from learning.neuralnet.FeatureColumnsPatrec import FeatureColumnsPatrec
-from learning.neuralnet.FeatureColumnsNZ import FeatureColumnsNZ
-from learning.neuralnet.FeatureColumnsNZFusion import FeatureColumnsNZFusion
+from learning.neuralnet.AutoEncoderModel import AutoEncoderModel
+from learning.neuralnet.FeatureColumnsAutoEncoderNZ import FeatureColumnsAutoEncoderNZ
 from learning.neuralnet.FeatureColumnsPatrecFusion import FeatureColumnsPatrecFusion
 from utils.DatasetOptions import DatasetOptions
 
@@ -77,35 +75,29 @@ def run_deep(flags_obj):
     """
     dict_data_train = {
         'dir_data':             DIRPROJECT + 'data/',
-        'data_prefix':          'patrec',
-        'dataset':              '20122015',
-        'encoding':             'embedding',
+        'data_prefix':          'nz',
+        'dataset':              '2012',
+        'encoding':             'categorical',
         'newfeatures':          None,
-        'featurereduction':     {'method': 'FUSION'},
+        'featurereduction':     {'method': 'ONLYDIAG'},
         'grouping':             'verylightgrouping'
     }
     dataset_options_train = DatasetOptions(dict_data_train);
-
     dataset_options_eval = None;
 
-
     if dict_data_train['data_prefix'] == 'nz':
-        feature_columns_nz_fusion = FeatureColumnsNZFusion(dataset_options=dataset_options_train);
-        feature_columns = feature_columns_nz_fusion;
-    elif dict_data_train['data_prefix'] == 'patrec':
-        feature_columns_patrec_fusion = FeatureColumnsPatrecFusion(dataset_options=dataset_options_train);
-        feature_columns = feature_columns_patrec_fusion;
+        feature_columns = FeatureColumnsAutoEncoderNZ(dataset_options=dataset_options_train);
     else:
         print('unknown data prefix..exit')
         sys.exit()
 
     dict_dataset_options = {
-        'train':        dataset_options_train,
-        'eval':         dataset_options_eval,
-        'test':         None
+        'train':    dataset_options_train,
+        'eval':     dataset_options_eval,
+        'test':     None
     }
 
-    nn = NeuralNetModel('train', dict_dataset_options, feature_columns, flags_obj);
+    nn = AutoEncoderModel('train', dict_dataset_options, feature_columns, flags_obj);
     nn.train();
 
 

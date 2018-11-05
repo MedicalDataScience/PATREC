@@ -6,7 +6,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.python.summary import summary
 
-from learning.neuralnet.NeuralNetEstimator import NeuralNetEstimator
+from learning.neuralnet.AutoEncoderEstimator import AutoEncoderEstimator
 from learning.neuralnet.NeuralNetDatasetHandler import NeuralNetDatasetHandler
 from learning.neuralnet.NeuralNetDatasetMaker import NeuralNetDatasetMaker
 from utils.Dataset import Dataset
@@ -15,7 +15,7 @@ from official.utils.logs import hooks_helper
 from official.utils.logs import logger
 from official.utils.misc import model_helpers
 
-class NeuralNetModel():
+class AutoEncoderModel():
 
     def __init__(self, mode, dict_dataset_options, feature_columns, flags):
         self.feature_columns = feature_columns;
@@ -47,9 +47,9 @@ class NeuralNetModel():
         batchnorm = self.flags.batchnorm;
         batchsize = self.flags.batch_size;
         dataset_filename_options = self.dataset_options_train.getFilenameOptions(filteroptions=False);
-        suffix_modeldir = '';
+        suffix_modeldir = 'autoencoder_';
         if self.flags.continue_training:
-            suffix_modeldir = 'warmstart_';
+            suffix_modeldir = 'autoencoder_warmstart_';
         suffix_modeldir = suffix_modeldir + dataset_filename_options + '_' + str(self.flags.hidden_units[0]);
 
         for k in range(1, len(self.flags.hidden_units)):
@@ -64,19 +64,19 @@ class NeuralNetModel():
 
 
     def _input_fn_train(self):
-        dataset = self.dataset_handler_train.readDatasetTF();
+        dataset = self.dataset_handler_train.readDatasetAE();
         dataset = dataset.repeat(self.flags.epochs_between_evals);
         dataset = dataset.batch(self.flags.batch_size);
         return dataset;
 
     def _input_fn_eval(self):
-        dataset = self.dataset_handler_eval.readDatasetTF();
+        dataset = self.dataset_handler_eval.readDatasetAE();
         dataset = dataset.repeat(1);
         dataset = dataset.batch(self.flags.batch_size);
         return dataset;
 
     def _input_fn_test(self):
-        dataset = self.dataset_handler_test.readDatasetTF();
+        dataset = self.dataset_handler_test.readDatasetAE();
         dataset = dataset.repeat(1);
         dataset = dataset.batch(self.flags.batch_size);
         return dataset;
@@ -102,7 +102,7 @@ class NeuralNetModel():
                 # Clean up the model directory if present
                 if not self.flags.model_dir == self.flags.pretrained_model_dir:
                     shutil.rmtree(self.flags.model_dir, ignore_errors=True)
-            self.model = NeuralNetEstimator(self.feature_columns, self.flags);
+            self.model = AutoEncoderEstimator(self.feature_columns, self.flags);
 
 
     def createDatasets(self):
@@ -110,11 +110,11 @@ class NeuralNetModel():
             if not self.dataset_options_eval is None:
                 dataset_maker_train = NeuralNetDatasetMaker('train', self.dataset_options_train);
                 dataset_maker_eval = NeuralNetDatasetMaker('eval', self.dataset_options_eval);
-                dataset_maker_train.createDatasets();
-                dataset_maker_eval.createDatasets();
+                dataset_maker_train.createDatasetsAutoEncoder();
+                dataset_maker_eval.createDatasetsAutoEncoder();
             else:
                 dataset_maker = NeuralNetDatasetMaker('traineval', self.dataset_options_train);
-                dataset_maker.createDatasets();
+                dataset_maker.createDatasetsAutoEncoder();
         elif self.mode == 'test':
             dataset_maker = NeuralNetDatasetMaker('test', self.dataset_options_test);
             dataset_maker.createDatasets();
@@ -129,12 +129,6 @@ class NeuralNetModel():
 
         estimator = self.model.getEstimator();
 
-        # def train_input_fn():
-        #     return self.input_fn(self.flags.epochs_between_evals, True, self.flags.batch_size, 'train')
-        #
-        # def eval_input_fn():
-        #     return self.input_fn(1, False, self.flags.batch_size, 'eval')
-
         run_params = {
             'batch_size': self.flags.batch_size,
             'train_epochs': self.flags.train_epochs,
@@ -147,23 +141,23 @@ class NeuralNetModel():
         # Train and evaluate the model every `flags.epochs_between_evals` epochs.
         for n in range(self.flags.train_epochs // self.flags.epochs_between_evals):
             estimator.train(input_fn=self._input_fn_train)
-            results = estimator.evaluate(input_fn=self._input_fn_eval)
+            # results = estimator.evaluate(input_fn=self._input_fn_eval)
             # Display evaluation metrics
             tf.logging.info('Results at epoch %d / %d', (n + 1) * self.flags.epochs_between_evals, self.flags.train_epochs)
             tf.logging.info('-' * 60)
 
-            for key in sorted(results):
-                tf.logging.info('%s: %s' % (key, results[key]))
+            # for key in sorted(results):
+            #     tf.logging.info('%s: %s' % (key, results[key]))
 
-            benchmark_logger.log_evaluation_result(results)
+            # benchmark_logger.log_evaluation_result(results)
 
-            if model_helpers.past_stop_threshold(self.flags.stop_threshold, results['accuracy']):
-                break;
+            # if model_helpers.past_stop_threshold(self.flags.stop_threshold, results['accuracy']):
+            #     break;
 
             # Export the model
-            print('export the model?')
-            if n % 10 == 0 and self.flags.export_dir is not None:
-                self.export_model()
+            # print('export the model?')
+            # if n % 10 == 0 and self.flags.export_dir is not None:
+            #     self.export_model()
 
 
     def predict(self):

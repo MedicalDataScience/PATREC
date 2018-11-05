@@ -29,14 +29,16 @@ class FeatureColumnsNZFusion:
             'diag', diag_other
         )
 
-        feature_columns = []
+        # feature_columns = []
+        feature_columns = tf.feature_column.shared_embedding_columns([main_diag, other_diag], dimension=128)
         feature_columns.append(age);
         feature_columns.append(los);
-        feature_columns.append(tf.feature_column.embedding_column(categorical_column=gender, dimension=2))
-        feature_columns.append(tf.feature_column.embedding_column(categorical_column=main_diag, dimension=8))
-        feature_columns.append(tf.feature_column.embedding_column(categorical_column=other_diag,
-                                                                  dimension=8,
-                                                                  combiner='sqrtn'));
+        feature_columns.append(tf.feature_column.embedding_column(categorical_column=gender, dimension=1))
+        print('len(feature_columns): ' + str(len(feature_columns)))
+        # feature_columns.append(tf.feature_column.embedding_column(categorical_column=main_diag, dimension=26))
+        # feature_columns.append(tf.feature_column.embedding_column(categorical_column=other_diag,
+        #                                                           dimension=26,
+        #                                                           combiner='sqrtn'));
         return feature_columns;
 
     def getDefaultValues(self, headers):

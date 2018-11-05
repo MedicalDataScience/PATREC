@@ -4,11 +4,13 @@ import os
 import matplotlib.pyplot as plt
 
 from utils.DatasetOptions import DatasetOptions
-from utils.CategoricalDataset import CategoricalDataset
+from utils.Dataset import Dataset
 from learning.ClassifierRF import OptionsRF
+from learning.ClassifierLogisticRegression import OptionsLogisticRegression
 from analyzing.LearnedFeaturesAnalyzer import LearnedFeaturesAnalyzer
 
-
+import helpers.constants as constantsPATREC
+import helpers.constantsNZ as constantsNZ
 
 def getMostImportantFeaturesSingleRun(feature_values, feature_names, num_features):
     feat_coefs = [];
@@ -29,44 +31,32 @@ if __name__ == '__main__':
     dirModelsBase = dirProject + 'classifiers/'
     dirPlotsBase = dirProject + 'plots/learned_features/';
 
-    new_features = ['previous_visits', 'ratio_los_age', 'ratio_numDK_age', 'ratio_los_numDK', 'ratio_numCHOP_age',
-                    'ratio_los_numOE', 'ratio_numOE_age', 'mult_los_numCHOP', 'mult_equalOE_numDK',
-                    'diff_drg_alos', 'diff_drg_lowerbound', 'diff_drg_upperbound',
-                    'rel_diff_drg_alos', 'rel_diff_drg_lowerbound', 'rel_diff_drg_upperbound',
-                    'alos', 'ratio_drg_los_alos'];
-
-    # new_features = ['rel_diff_drg_alos', 'rel_diff_drg_lowerbound', 'rel_diff_drg_upperbound']
-    options_standard = None;
-    options_newfeatures = {'names_new_features': new_features};
-    options_reduction = {'reduction_method': 'NOADMIN'};
-
     dict_options_dataset_training = {
-        'dir_data':                 dirData,
-        'dataset':                  '20122015',
-        'subgroups':                ['OE', 'DK', 'CHOP'],
-        'featureset':               'newfeatures',
-        'options_featureset':       options_newfeatures,
-        'grouping':                 'grouping',
-        'options_grouping':         None,
-        'encoding':                 'categorical',
-        'options_encoding':         None,
-        'options_filtering':        'EntlassBereich_Med',
-        'chunksize':                10000,
-        'ratio_training_samples':   0.85,
+        'dir_data':             dirData,
+        'data_prefix':          'patrec',
+        'dataset':              '20122015',
+        'subgroups':            ['DK'],
+        'encoding':             'categorical',
+        'newfeatures':          None,
+        'featurereduction':     {'method': 'FUSION'},
+        'grouping':             'verylightgrouping'
     }
-
-
     options_training = DatasetOptions(dict_options_dataset_training);
-    dataset_training = CategoricalDataset(dataset_options=options_training);
-    options_rf = OptionsRF(dirModelsBase, options_training.getFilenameOptions());
+
+    dict_opt_rf = {'n_estimators': 100, 'max_depth': 15};
+    options_rf = OptionsRF(dirModelsBase, options_training.getFilenameOptions(filteroptions=True), options_clf=dict_opt_rf);
+
+    dict_opt_lr = {'penalty': 'l2', 'C': 0.01};
+    options_lr = OptionsLogisticRegression(dirModelsBase, options_training.getFilenameOptions(filteroptions=True), options_clf=dict_opt_lr);
+
+    options = options_rf;
 
     analyzer = LearnedFeaturesAnalyzer(dir_plots_base=dirPlotsBase,
                                        options_training_data=options_training,
-                                       options_classifier=options_rf,
-                                       dataset_training=dataset_training,
+                                       options_classifier=options,
                                        num_runs=10);
 
-    num_important_features = 50;
+    num_important_features = 25;
     analyzer.plotAvgLearnedFeatures(num_features=num_important_features);
 
 
