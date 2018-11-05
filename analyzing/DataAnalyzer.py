@@ -238,6 +238,36 @@ class DataAnalyzer:
         print(subgroup + ' --> number of non-zero columns: ' + str(num_columns))
 
 
+    def _getAvgNumSubgroupPatrec(self, subgroup):
+        dir_data = self.dataset_options.getDirData();
+        dataset = self.dataset_options.getDatasetName();
+        name_demographic_features = self.dataset_options.getFilenameOptionDemographicFeatures();
+        encoding = self.dataset_options.getEncodingScheme();
+        feature_set_str = self.dataset_options.getFeatureSetStr();
+        filename_data_subgroup = dir_data + 'data_patrec_' + dataset + '_' + name_demographic_features + '_' + feature_set_str + '_' + encoding + '.csv';
+        df = pd.read_csv(filename_data_subgroup);
+
+        df_num_subgroup = df['num' + subgroup];
+        avg_num = np.mean(df_num_subgroup.values);
+        return avg_num;
+
+
+    def _getAvgNumSubgroupNZ(self):
+        dir_data = self.dataset_options.getDirData();
+        dataset = self.dataset_options.getDatasetName();
+        name_demographic_features = self.dataset_options.getFilenameOptionDemographicFeatures();
+        grouping = self.dataset_options.getGroupingName()
+        encoding = self.dataset_options.getEncodingScheme();
+        feature_set_str = self.dataset_options.getFeatureSetStr();
+        filename_data_subgroup = dir_data + 'data_nz_' + dataset + '_' + feature_set_str + '_' + encoding + '_' + grouping + '.csv';
+        df = pd.read_csv(filename_data_subgroup);
+
+        df_num_subgroup = df['diag_DIAG_COUNT'];
+        avg_num = np.mean(df_num_subgroup.values);
+        return avg_num;
+
+
+
     def _getNumberColumnsSubgroupNZ(self, subgroup):
         dir_data = self.dataset_options.getDirData();
         dataset = self.dataset_options.getDatasetName();
@@ -283,6 +313,22 @@ class DataAnalyzer:
             self._getNumberHauptdiagnoseNZ()
         else:
             print('data prefix is unknown...exit')
+            sys.exit();
+
+
+    def getAvgNumberSubgroup(self, subgroup):
+        data_prefix = self.dataset_options.getDataPrefix();
+        if data_prefix == 'patrec':
+            avg_num = self._getAvgNumSubgroupPatrec(subgroup);
+            return avg_num;
+        elif data_prefix == 'nz':
+            if not subgroup == 'DK':
+                print('only implemented for diagnoses...exit')
+                sys.exit();
+            avg_num = self._getAvgNumSubgroupNZ()
+            return avg_num;
+        else:
+            print('unknown data prefix..exit')
             sys.exit();
 
 

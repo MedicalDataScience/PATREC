@@ -1,8 +1,10 @@
 import sys
 import os
 
+
 import pandas as pd
 
+import helpers.helpers as helpers
 
 class DataPreparer:
 
@@ -80,6 +82,36 @@ class DataPreparer:
         return df;
 
 
+    def _removeAllFeaturesButDiag(self):
+        dir_data = self.options.getDirData();
+        data_prefix = self.options.getDataPrefix();
+        dataset = self.options.getDatasetName();
+        grouping = self.options.getGroupingName();
+        subgroups = self.options.getSubgroups();
+        event_column_name = self.options.getEventColumnName();
+
+        sub = 'diag';
+        diag_group_names = helpers.getDKverylightGrouping();
+        strFilenameInSubGroup = dataset + '_' + sub + '_' + grouping;
+        filename_data_subgroup = dir_data + 'data_' + data_prefix + '_' + strFilenameInSubGroup + '.csv';
+        print(filename_data_subgroup)
+        subgroup_df = pd.read_csv(filename_data_subgroup, usecols=diag_group_names);
+        # group_names = list(subgroup_df.columns);
+        # subgroup_df = subgroup_df.drop(subgroup_df.columns[subgroup_df.columns.str.contains('unnamed', case=False)], axis=1)
+        # for groupname in group_names:
+        #     subgroup_df = subgroup_df.rename(columns={groupname: sub + '_' + groupname});
+        try:
+            subgroup_df = subgroup_df.drop(event_column_name, axis=1);
+        except KeyError:
+            pass;
+        try:
+            subgroup_df = subgroup_df.drop('DIAG_COUNT', axis=1);
+        except KeyError:
+            pass;
+        print(list(subgroup_df.columns))
+        return subgroup_df;
+
+
     def __getFilenameOptionStr(self):
         dataset = self.options.getDatasetName();
         encoding = self.options.getEncodingScheme();
@@ -104,17 +136,18 @@ class DataPreparer:
         df_fused = self.__fuseSplittedColumnsString(df);
         return df_fused;
 
-
     def fuseSubgroups(self):
         encoding = self.options.getEncodingScheme();
         dir_data = self.options.getDirData();
         data_prefix = self.options.getDataPrefix();
         featurereduction = self.options.getFeatureReductionSettings();
+        chunksize = self.options.getChunkSize();
 
         [filename_in_str, filename_out_str] = self.__getFilenameOptionStr()
         filename_data_out = dir_data + 'data_' + data_prefix + '_' + filename_out_str + '.csv';
         filename_data_in = dir_data + 'data_' + data_prefix + '_' + filename_in_str + '.csv';
-        df_base = pd.read_csv(filename_data_in);
+        if not featurereduction['method'] == 'ONLYDIAG':
+            df_base = pd.read_csv(filename_data_in);
 
         if encoding == 'embedding':
             df_finish = self.__fuseSubgroupsString(df_base);
@@ -122,6 +155,8 @@ class DataPreparer:
             if featurereduction is not None:
                 if featurereduction['method'] == 'ONLYADMIN':
                     df_finish = df_base;
+                elif featurereduction['method'] == 'ONLYDIAG':
+                    df_finish = self._removeAllFeaturesButDiag();
                 else:
                     df_finish = self.__fuseSubgroupsCategories(df_base);
             else:
@@ -129,38 +164,11 @@ class DataPreparer:
         else:
             print('encoding scheme is not known...maybe not yet implemented..')
             sys.exit();
-        df_finish.to_csv(filename_data_out, mode='w', index=False, line_terminator='\n');
+
+        print('df_finish.shape: ' + str(df_finish.shape))
+
+        list_df = [df_finish[i:i + chunksize] for i in range(0, df_finish.shape[0], chunksize)]
+        list_df[0].to_csv(filename_data_out, index=False, line_terminator='\n')
+        for l in list_df[1:]:
+            l.to_csv(filename_data_out, index=False, line_terminator='\n', header=False, mode='a')
         return;
-
-
-    # def fuseSubgroupsNZ(self):
-    #
-    #     encoding = self.options.getEncodingScheme();
-    #     grouping = self.options.getGroupingName();
-    #     dir_data = self.options.getDirData();
-    #     dataset = self.options.getDatasetName();
-    #     data_prefix = self.options.getDataPrefix();
-    #     featurereduction = self.options.getFeatureReductionSettings();
-    #     feature_set_str = self.options.getFeatureSetStr();
-    #
-    #     filename_options_out = dataset + '_' + feature_set_str + '_' + encoding + '_' + grouping;
-    #     filename_data_out = dir_data + 'data_' + data_prefix + '_' + filename_options_out + '.csv';
-    #     filename_data_in = dir_data + 'data_' + data_prefix + '_' + dataset + '_discharge_' + encoding + '.csv';
-    #     df_base = pd.read_csv(filename_data_in);
-    #     df_base = df_base.drop(df_base.columns[df_base.columns.str.contains('unnamed', case=False)],axis=1)
-    #
-    #     if encoding == 'embedding':
-    #         df_finish = self.__fuseSubgroupsString(df_base);
-    #     elif encoding == 'categorical' or encoding == 'binary':
-    #         if featurereduction is not None:
-    #             if featurereduction['method'] == 'NOADMIN':
-    #                 df_finish = self.__fuseSubgroupsCategories(df_base);
-    #             else:
-    #                 df_finish = self.__fuseSubgroupsCategories(df_base);
-    #         else:
-    #             df_finish = self.__fuseSubgroupsCategories(df_base);
-    #     else:
-    #         print('encoding scheme is not known...maybe not yet implemented..')
-    #         sys.exit();
-    #     df_finish.to_csv(filename_data_out, mode='w', index=False, line_terminator='\n');
-    #     return;

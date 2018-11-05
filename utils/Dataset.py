@@ -27,8 +27,7 @@ class Dataset:
             self._filterData();
         else:
             filename = self.options.getFilename()
-            print(filename)
-            df = pd.read_csv(filename);
+            df = pd.read_csv(filename, nrows=50000);
             self.df = df;
     
 
@@ -190,4 +189,16 @@ class Dataset:
         datasplitter = DatasetSplitter(self.options)
         datasplitter.splitDatasetIntoTrainingTesting();
 
+
+    def getNumSamplesBalancedSubset(self):
+        [df_pos, df_neg] = self._getBalancedSubset();
+        df_balanced = df_pos.append(df_neg);
+        num_samples = df_balanced.shape[0];
+        return num_samples;
+
+    def getNumSamples(self):
+        if self.df is None:
+            self._getDf();
+        num_samples = self.df.shape[0];
+        return num_samples;
 

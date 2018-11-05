@@ -2,7 +2,7 @@ import os
 import sys
 
 from preprocessing.PreprocessorNZ import PreprocessorNZ
-from utils.DatasetOptionsNZ_OLD import DatasetOptionsNZ
+from utils.DatasetOptions import DatasetOptions
 
 dirProject = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/';
 dirData = dirProject + 'data/';
@@ -15,13 +15,15 @@ new_features = ['previous_visits', 'ratio_los_age', 'ratio_numDK_age', 'ratio_lo
 
 def main(dict_dataset_options):
 
-    options = DatasetOptionsNZ(dict_dataset_options);
+    options = DatasetOptions(dict_dataset_options);
     preproc = PreprocessorNZ(options);
 
+    print('grouping: ' + str(options.getGroupingName()))
     # preproc.processDischargeFile();
     # preproc.processDiagnosisFile();
 
-    preproc.encodeFeatures();
+    # preproc.createFeatureSet();
+    # preproc.encodeFeatures();
     preproc.fuse();
 
 
@@ -33,14 +35,18 @@ if __name__ == '__main__':
     else:
         year_to_process = 1988;
 
-    years = [2012, 2013, 2014, 2015, 2016, 2017]
-
+    years = [2012]
+    # years = [2007, 2008, 2009, 2010, 2011]
+    # years = [2001, 2002, 2003, 2004, 2005, 2006]
     for year in years:
         dict_dataset_options = {
-            'dir_data':     dirData,
-            'dataset':      str(year),
-            'encoding':     'embedding',
-            'featureset':   'standard'
+            'dir_data':             dirData,
+            'data_prefix':          'nz',
+            'dataset':              str(year),
+            'encoding':             'categorical',
+            'grouping':             'verylightgrouping',
+            'newfeatures':          None,
+            'featurereduction':     {'method': 'ONLYDIAG'}
         }
         print('')
         print('processing year: ' + str(year))

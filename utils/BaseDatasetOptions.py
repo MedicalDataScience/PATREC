@@ -97,6 +97,13 @@ class BaseDatasetOptions:
             self.filename = self._getFilename();
         return self.filename;
 
+
+    def getFilenameSubgroup(self, subgroup):
+        str = self.dir_data + '/' + 'data_';
+        str = str + self.data_prefix + '_' + self.dataset + '_' + subgroup + '_' + self.grouping + '.csv';
+        return str;
+
+
     def getNewFeatureSettings(self):
         return self.newfeatures;
 

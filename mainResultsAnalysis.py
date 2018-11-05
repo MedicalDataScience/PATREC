@@ -7,12 +7,13 @@ from utils.Results import Results
 from learning.ClassifierRF import OptionsRF
 from learning.ClassifierLogisticRegression import ClassifierLogisticRegression
 from learning.ClassifierLogisticRegression import OptionsLogisticRegression
+from learning.ClassifierNN import OptionsNN
 from analyzing.ResultsAnalyzer import ResultsSingleConfigAnalyzer;
 from analyzing.ResultsAnalyzer import ResultsAnalyzer
 
 
 
-def plotOneTrainingSetDifferentTestSets(results_analyzer):
+def plotOneTrainingSetDifferentTestSets(results_analyzer, dirData, dirModelsBase, dirResultsBase):
     data_prefix = 'patrec'
     dict_options_dataset_training = {
         'dir_data':             dirData,
@@ -73,7 +74,7 @@ def plotOneTrainingSetDifferentTestSets(results_analyzer):
     results_analyzer.plotROCcurveMulitpleConfigs(analyzer, names, f_plot=filename_plot, titlePlot=title_plot, )
 
 
-def plotDifferentTrainingSetDifferentTestSets(results_analyzer):
+def plotDifferentTrainingSetDifferentTestSets(results_analyzer, dirData, dirModelsBase, dirResultsBase):
     data_prefix = 'patrec'
 
     # compare different subsets of data: EntlassBereich (only with RandomForest)
@@ -156,7 +157,43 @@ def plotDifferentTrainingSetDifferentTestSets(results_analyzer):
     results_analyzer.plotROCcurveMulitpleConfigs(analyzer, names, f_plot=filename_plot, titlePlot=title_plot, )
 
 
-def plotDifferentClassifiers(results_analyzer):
+def plotDifferentTrainingSetSingleTestSetNZ(results_analyzer, dirData, dirModelsBase, dirResultsBase):
+    print('plotDifferentTrainingSetSingleTestSetNZ')
+    data_prefix = 'nz'
+
+    dict_options_dataset_testing = {
+        'dir_data':                 dirData,
+        'data_prefix':              data_prefix,
+        'dataset':                  '2017',
+        'options_filtering':        None
+    }
+    options_testing = DatasetOptions(dict_options_dataset_testing);
+
+    years_training = [2012, 2013, 2014, 2015, 2016];
+    names = [];
+    analyzers = []
+    for year in years_training:
+        print(year)
+        dict_options_dataset_training = {
+            'dir_data':             dirData,
+            'data_prefix':          data_prefix,
+            'dataset':              str(year),
+            'options_filtering':    None
+        }
+        options_training_year = DatasetOptions(dict_options_dataset_training);
+        options_rf_year = OptionsRF(dirModelsBase, options_training_year.getFilenameOptions(filteroptions=True));
+        results_test_year = Results(dirResultsBase, options_training_year, options_rf_year, 'test', options_testing);
+
+        names.append(str(year))
+        analyzers.append(ResultsSingleConfigAnalyzer(results_test_year, 10));
+
+    title_plot = 'classifier (rf): trained on subsets of nz 2012-2016, tested on subset of nz 2017'
+    filename_plot = dirPlotsBase + 'rf_training_nz_years_20122016_testing_nz_year_2017.png'
+    print('plot ROC curve...')
+    results_analyzer.plotROCcurveMulitpleConfigs(analyzers, names, f_plot=filename_plot, titlePlot=title_plot, )
+
+
+def plotDifferentClassifiers(results_analyzer, dirData, dirModelsBase, dirResultsBase):
     data_prefix = 'patrec'
 
     # compare different subsets of data: EntlassBereich (only with RandomForest)
@@ -197,10 +234,121 @@ def plotDifferentClassifiers(results_analyzer):
     results_analyzer.plotROCcurveMulitpleConfigs(analyzer, names, f_plot=filename_plot, titlePlot=title_plot, )
 
 
+def plotNNPerformance(results_analyzer, dirData, dirModelsBase, dirResultsBase):
+
+    # compare different trainings of NNs
+    dict_options_dataset_training = {
+        'dir_data':             dirData,
+        'data_prefix':          'nz',
+        'dataset':              '20122016',
+        'encoding':             'embedding',
+        'newfeatures':          None,
+        'featurereduction':     {'method': 'FUSION'},
+        'grouping':             'verylightgrouping'
+    }
+    dict_options_dataset_testing = {
+        'dir_data':             dirData,
+        'data_prefix':          'nz',
+        'dataset':              '2017',
+        'encoding':             'embedding',
+        'newfeatures':          None,
+        'featurereduction':     {'method': 'FUSION'},
+        'grouping':             'verylightgrouping'
+    }
+    options_training_nn = DatasetOptions(dict_options_dataset_training);
+    options_testing_nn = DatasetOptions(dict_options_dataset_testing);
+
+    dict_options_nn = {
+        'hidden_units':     [60, 40, 20, 10, 10],
+        'learningrate':     0.05,
+        'dropout':          0.25,
+        'batch_size':       640,
+        'training_epochs':  250,
+        'pretrained':       'pretrained'
+    }
+    options_nn_nz = OptionsNN(dirModelsBase, options_training_nn.getFilenameOptions(filteroptions=True), options_clf=dict_options_nn)
+    results_nn_nz = Results(dirResultsBase, options_training_nn, options_nn_nz, 'test', options_testing_nn);
+
+    dict_options_dataset_training = {
+        'dir_data':             dirData,
+        'data_prefix':          'patrec',
+        'dataset':              '20122015',
+        'encoding':             'embedding',
+        'newfeatures':          None,
+        'featurereduction':     {'method': 'FUSION'},
+        'grouping':             'verylightgrouping'
+    }
+    dict_options_dataset_testing = {
+        'dir_data':             dirData,
+        'data_prefix':          'patrec',
+        'dataset':              '20162017',
+        'encoding':             'embedding',
+        'newfeatures':          None,
+        'featurereduction':     {'method': 'FUSION'},
+        'grouping':             'verylightgrouping'
+    }
+    options_training_nn = DatasetOptions(dict_options_dataset_training);
+    options_testing_nn = DatasetOptions(dict_options_dataset_testing);
+
+    dict_options_nn = {
+        'hidden_units':     [20, 10, 10],
+        'learningrate':     0.01,
+        'dropout':          0.15,
+        'batch_size':       80,
+        'training_epochs':  500,
+    }
+    options_nn_patrec = OptionsNN(dirModelsBase, options_training_nn.getFilenameOptions(filteroptions=True), options_clf=dict_options_nn)
+    results_nn_patrec = Results(dirResultsBase, options_training_nn, options_nn_patrec, 'test', options_testing_nn);
+
+    dict_options_nn = {
+        'hidden_units':     [20, 10, 10],
+        'learningrate':     0.01,
+        'dropout':          0.25,
+        'batch_size':       80,
+        'training_epochs':  500,
+        'pretrained':       'pretrained'
+    }
+    options_nn_patrec_pretrained = OptionsNN(dirModelsBase, options_training_nn.getFilenameOptions(filteroptions=True), options_clf=dict_options_nn)
+    results_nn_patrec_pretrained = Results(dirResultsBase, options_training_nn, options_nn_patrec_pretrained, 'test', options_testing_nn);
+
+    dict_options_dataset_training = {
+        'dir_data': dirData,
+        'data_prefix': 'patrec',
+        'dataset': '20122015',
+        'subgroups': ['DK'],
+        'encoding': 'categorical',
+        'newfeatures': None,
+        'featurereduction': {'method': 'FUSION'},
+        'grouping': 'verylightgrouping'
+    }
+    dict_options_dataset_testing = {
+        'dir_data': dirData,
+        'data_prefix': 'patrec',
+        'dataset': '20162017',
+        'subgroups': ['DK'],
+        'encoding': 'categorical',
+        'newfeatures': None,
+        'featurereduction': {'method': 'FUSION'},
+        'grouping': 'verylightgrouping'
+    }
+    dict_opt_lr = {'penalty': 'l1', 'C': 0.075};
+    options_training = DatasetOptions(dict_options_dataset_training);
+    options_testing = DatasetOptions(dict_options_dataset_testing);
+    options_lr = OptionsLogisticRegression(dirModelsBase, options_training.getFilenameOptions(filteroptions=True), options_clf=dict_opt_lr);
+    results_lr = Results(dirResultsBase, options_training, options_lr, 'test', options_testing);
+
+    analyzer_nn_nz = ResultsSingleConfigAnalyzer(results_nn_nz, 1);
+    analyzer_nn_patrec = ResultsSingleConfigAnalyzer(results_nn_patrec, 1);
+    analyzer_nn_patrec_pretrained = ResultsSingleConfigAnalyzer(results_nn_patrec_pretrained, 1);
+    analyzer_lr = ResultsSingleConfigAnalyzer(results_lr, 10);
+    analyzer = [analyzer_nn_nz, analyzer_nn_patrec, analyzer_nn_patrec_pretrained, analyzer_lr];
+    names = ['NZ', 'Basel', 'Basel (pretrained NZ)', 'LASSO']
+    title_plot = 'neural network performance: with and without pre-training'
+    filename_plot = dirPlotsBase + 'nn_pretraining_nz_plus_lasso.png'
+    results_analyzer.plotROCcurveMulitpleConfigs(analyzer, names, f_plot=filename_plot)
 
 
-
-def plotSingleConfiguration(results_analyzer):
+def plotSingleConfiguration(results_analyzer, dirData, dirModelsBase, dirResultsBase):
     dict_options_dataset_training = {
         'dir_data': dirData,
         'data_prefix': 'patrec',
@@ -233,13 +381,12 @@ if __name__ == '__main__':
 
     results_analyzer = ResultsAnalyzer();
 
-    plotSingleConfiguration(results_analyzer);
-
-    plotOneTrainingSetDifferentTestSets(results_analyzer);
-
-    plotDifferentTrainingSetDifferentTestSets(results_analyzer)
-
-    plotDifferentClassifiers(results_analyzer)
+    # plotSingleConfiguration(results_analyzer, dirData, dirModelsBase, dirResultsBase);
+    # plotOneTrainingSetDifferentTestSets(results_analyzer, dirData, dirModelsBase, dirResultsBase);
+    # plotDifferentTrainingSetDifferentTestSets(results_analyzer, dirData, dirModelsBase, dirResultsBase)
+    # plotDifferentClassifiers(results_analyzer, dirData, dirModelsBase, dirResultsBase)
+    # plotDifferentTrainingSetSingleTestSetNZ(results_analyzer, dirData, dirModelsBase, dirResultsBase)
 
 
+    plotNNPerformance(results_analyzer, dirData, dirModelsBase, dirResultsBase);
 

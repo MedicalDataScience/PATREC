@@ -1,5 +1,7 @@
 
 import sys
+from datetime import datetime
+
 import pandas as pd
 
 
@@ -70,6 +72,31 @@ class FeatureReducer:
         return df;
 
 
+    def _changeWiederkehrerDef(self, df):
+        df = df.sort_values(by=['Patient', 'Aufnahmedatum'])
+        patient_ids_wiederkehrer = df['Patient'].unique();
+        single_visiting_patients = 0;
+        for k in range(0, len(patient_ids_wiederkehrer)):
+            p_id = patient_ids_wiederkehrer[k]
+            cases_df = df.loc[df['Patient'] == p_id];
+            new_patient = True;
+            if cases_df.shape[0] == 1:
+                single_visiting_patients += 1;
+            for index, row in cases_df.iterrows():
+                if not new_patient:
+                    timestamp_enter = row['Aufnahmedatum'];
+                    diff = (datetime.fromtimestamp(timestamp_enter) - datetime.fromtimestamp(timestamp_previous_exit));
+                    days = diff.days;
+                    if int(days) <= 18:
+                        # print(str(datetime.fromtimestamp(timestamp_enter).strftime("%y,%m,%d")) + ' vs. ' + str(datetime.fromtimestamp(timestamp_previous_exit).strftime("%y,%m,%d")))
+                        # print(str(int(row['Patient'])) + ': ' + ' --> ' + str(days) + ' --> ' + str(row['Wiederkehrer']))
+                        df.at[index_previous, 'Wiederkehrer'] = 1;
+                else:
+                    new_patient = False;
+                timestamp_previous_exit = row['Entlassdatum'];
+                index_previous = index;
+        return df;
+
     def reduceFeatures(self):
         dir_data = self.options.getDirData();
         data_prefix = self.options.getDataPrefix();
@@ -89,12 +116,16 @@ class FeatureReducer:
             elif reduction_method == 'NOLIEGESTATUS':
                 df_reduced = self.__removeLiegestatusFeatures(df);
             elif reduction_method == 'FUSION':
+                if data_prefix == 'patrec':
+                    df = self._changeWiederkehrerDef(df);
                 df_reduced = self.__removeAllButFusionFeatures(df);
+            elif reduction_method == 'ONLYDIAG':
+                pass
             else:
                 print('feature reduction algorithm is not known/implemented yet...exit')
                 print('possible reduction methods are: NOADMIN or ONLYADMIN');
                 sys.exit();
-
-            df_reduced.to_csv(filename_data_out, mode='w', index=False, line_terminator='\n')
+            if not reduction_method == 'ONLYDIAG':
+                df_reduced.to_csv(filename_data_out, mode='w', index=False, line_terminator='\n')
         else:
             print('the reduction method needs to be named...')

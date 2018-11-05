@@ -5,6 +5,9 @@ from analyzing.DataAnalyzer import DataAnalyzer
 from utils.Dataset import Dataset
 from utils.DatasetOptions import DatasetOptions
 
+import helpers.constants as constants
+import helpers.constantsNZ as constantsNZ
+
 dirProject = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/';
 dirData = dirProject + 'data/';
 dirPlotsBase = dirProject + 'plots/feature_comparison_wiederkehrer_normal/'
@@ -12,8 +15,12 @@ dirPlotsBase = dirProject + 'plots/feature_comparison_wiederkehrer_normal/'
 
 dict_options_analyzing = {
     'dir_data':             dirData,
-    'data_prefix':          'nz',
-    'dataset':              '2012',
+    'data_prefix':          'patrec',
+    'dataset':              '20162017',
+    'encoding':             'categorical',
+    'newfeatures':          {'names': constantsNZ.NEW_FEATURES},
+    'featurereduction':     None,
+    'grouping':             'grouping'
 }
 
 options = DatasetOptions(dict_options_analyzing);
@@ -29,8 +36,12 @@ if not os.path.exists(dirPlots):
 
 analyzer = DataAnalyzer(options, dirPlots)
 # analyzer.doFeatureComparison()
-# analyzer.checkWiederkehrer();
-analyzer.getNumberHauptdiagnose();
+analyzer.checkWiederkehrer();
+
+# avg_num_subgrp = analyzer.getAvgNumberSubgroup('DK')
+# print('avg num DK: ' + str(avg_num_subgrp))
+
+# analyzer.getNumberHauptdiagnose();
 # analyzer.getNumberColumnsSubgroup('DK');
 # analyzer.getNumberColumnsSubgroup('CHOP');
 # analyzer.getNumberColumnsSubgroup('OE');
