@@ -16,11 +16,12 @@ dirPlotsBase = dirProject + 'plots/feature_comparison_wiederkehrer_normal/'
 dict_options_analyzing = {
     'dir_data':             dirData,
     'data_prefix':          'patrec',
-    'dataset':              '20162017',
+    'dataset':              '20122015',
     'encoding':             'categorical',
-    'newfeatures':          {'names': constantsNZ.NEW_FEATURES},
+    'newfeatures':          {'names': constants.NEW_FEATURES},
     'featurereduction':     None,
-    'grouping':             'grouping'
+    'grouping':             'verylightgrouping',
+    'filtering':            'cardiovascular'
 }
 
 options = DatasetOptions(dict_options_analyzing);
@@ -35,8 +36,8 @@ if not os.path.exists(dirPlots):
     os.makedirs(dirPlots);
 
 analyzer = DataAnalyzer(options, dirPlots)
-# analyzer.doFeatureComparison()
-analyzer.checkWiederkehrer();
+analyzer.doFeatureComparison()
+# analyzer.checkWiederkehrer();
 
 # avg_num_subgrp = analyzer.getAvgNumberSubgroup('DK')
 # print('avg num DK: ' + str(avg_num_subgrp))

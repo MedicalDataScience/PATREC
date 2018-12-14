@@ -38,7 +38,7 @@ if __name__ == '__main__':
     dict_data_train = {
         'dir_data':         DIRPROJECT + 'data/',
         'data_prefix':      'nz',
-        'dataset':          '20072016',
+        'dataset':          '20122016',
         'encoding':         'embedding',
         'newfeatures':      None,
         'featurereduction': {'method': 'FUSION'},

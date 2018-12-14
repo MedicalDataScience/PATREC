@@ -8,10 +8,11 @@ from learning.ClassifierRF import OptionsRF
 from learning.ClassifierLogisticRegression import ClassifierLogisticRegression
 from learning.ClassifierLogisticRegression import OptionsLogisticRegression
 from learning.ClassifierNN import OptionsNN
+from learning.ClassifierSGD import OptionsSGD
 from analyzing.ResultsAnalyzer import ResultsSingleConfigAnalyzer;
 from analyzing.ResultsAnalyzer import ResultsAnalyzer
 
-
+import helpers.constantsNZ as constantsNZ
 
 def plotOneTrainingSetDifferentTestSets(results_analyzer, dirData, dirModelsBase, dirResultsBase):
     data_prefix = 'patrec'
@@ -348,6 +349,47 @@ def plotNNPerformance(results_analyzer, dirData, dirModelsBase, dirResultsBase):
     results_analyzer.plotROCcurveMulitpleConfigs(analyzer, names, f_plot=filename_plot)
 
 
+
+def plotSGDClassifierPerformance(results_analyzer, dirData, dirModelsBase, dirResultsBase):
+
+    dict_options_dataset_testing = {
+        'dir_data':         dirData,
+        'data_prefix':      'nz',
+        'dataset':          '2016',
+        'encoding':         'categorical',
+        'newfeatures':      {'names': constantsNZ.NEW_FEATURES},
+        'featurereduction': None,
+        'grouping':         'grouping'
+    }
+    options_dataset_testing = DatasetOptions(dict_options_dataset_testing);
+
+    analyzer = [];
+    years = [2012, 2013, 2014, 2015];
+    for year in years:
+        dict_options_dataset_training = {
+            'dir_data':         dirData,
+            'data_prefix':      'nz',
+            'dataset':          str(year),
+            'encoding':         'categorical',
+            'newfeatures':      {'names': constantsNZ.NEW_FEATURES},
+            'featurereduction': None,
+            'grouping':         'grouping'
+        }
+        options_dataset_training = DatasetOptions(dict_options_dataset_training);
+
+        dict_opt_sgd = {'loss': 'log', 'penalty': 'l1'};
+        options_sgd = OptionsSGD(dirModelsBase, options_dataset_training.getFilenameOptions(filteroptions=True),options_clf=dict_opt_sgd);
+        results_year = Results(dirResultsBase, options_dataset_training, options_sgd, 'test', options_dataset_testing);
+        analyzer_sgd_year = ResultsSingleConfigAnalyzer(results_year, 1);
+        analyzer.append(analyzer_sgd_year);
+
+    names = ['2012', '2013', '2014', '2015'];
+    title_plot = 'performance of batch-based logistic regression'
+    filename_plot = dirPlotsBase + 'sgd_nz_performance_years_training20122015_test2016.png'
+    results_analyzer.plotROCcurveMulitpleConfigs(analyzer, names, f_plot=filename_plot, titlePlot=title_plot)
+
+
+
 def plotSingleConfiguration(results_analyzer, dirData, dirModelsBase, dirResultsBase):
     dict_options_dataset_training = {
         'dir_data': dirData,
@@ -388,5 +430,5 @@ if __name__ == '__main__':
     # plotDifferentTrainingSetSingleTestSetNZ(results_analyzer, dirData, dirModelsBase, dirResultsBase)
 
 
-    plotNNPerformance(results_analyzer, dirData, dirModelsBase, dirResultsBase);
-
+    # plotNNPerformance(results_analyzer, dirData, dirModelsBase, dirResultsBase);
+    plotSGDClassifierPerformance(results_analyzer, dirData, dirModelsBase, dirResultsBase);

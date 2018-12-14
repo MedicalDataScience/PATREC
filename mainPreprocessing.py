@@ -12,19 +12,19 @@ dirData = dirProject + 'data/';
 dict_dataset_options = {
     'dir_data':                 dirData,
     'data_prefix':              'patrec',
-    'dataset':                  '20162017',
-    'subgroups':                ['DK'],
+    'dataset':                  '20122015',
+    # 'subgroups':                ['DK'],
     'grouping':                 'verylightgrouping',
     'encoding':                 'categorical',
-    'newfeatures':              None,
-    'featurereduction':         {'method': 'FUSION'}
+    'newfeatures':              {'names': constantsPATREC.NEW_FEATURES},
+    'featurereduction':         None
 }
 
 options = DatasetOptions(dict_dataset_options);
 preproc = Preprocessor(options);
 # preproc.splitColumns();
 # preproc.clean()
-# preproc.group()
+preproc.group()
 preproc.createFeatureSet()
 preproc.encodeFeatures();
 preproc.fuse();

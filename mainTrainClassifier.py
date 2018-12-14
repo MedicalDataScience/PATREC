@@ -8,6 +8,8 @@ from learning.ClassifierRF import ClassifierRF
 from learning.ClassifierRF import OptionsRF
 from learning.ClassifierLogisticRegression import ClassifierLogisticRegression
 from learning.ClassifierLogisticRegression import OptionsLogisticRegression
+from learning.ClassifierSVM import OptionsSVM
+from learning.ClassifierSVM import ClassifierSVM
 
 import helpers.constants as constantsPATREC
 
@@ -21,11 +23,11 @@ if __name__ == '__main__':
     'dir_data':                 dirData,
     'data_prefix':              'patrec',
     'dataset':                  '20122015',
-    'subgroups':                ['DK'],
     'grouping':                 'verylightgrouping',
     'encoding':                 'categorical',
-    'newfeatures':              None,
-    'featurereduction':         {'method': 'FUSION'}
+    'newfeatures':              {'names': constantsPATREC.NEW_FEATURES},
+    'featurereduction':         None,
+    'filtering':                'oncology'
 }
 
     options_training = DatasetOptions(dict_options_dataset_training);
@@ -34,16 +36,21 @@ if __name__ == '__main__':
 
     print('dataset filename: ' + str(dataset_training.getFilename()))
 
-    dict_opt_rf = {'n_estimators': 100, 'max_depth': 15};
+    dict_opt_rf = {'n_estimators': 100, 'max_depth': 5};
     options_rf = OptionsRF(dirModelsBase, options_training.getFilenameOptions(filteroptions=True), options_clf=dict_opt_rf);
     clf_rf = ClassifierRF(options_rf);
 
-    dict_opt_lr = {'penalty': 'l1', 'C': 0.075};
+    dict_opt_lr = {'penalty': 'l2', 'C': 0.0001};
     options_lr = OptionsLogisticRegression(dirModelsBase, options_training.getFilenameOptions(filteroptions=True), options_clf=dict_opt_lr);
     clf_lr = ClassifierLogisticRegression(options_lr);
 
-    options_clf = options_lr
-    clf = clf_lr;
+
+    dict_options_svm = {'kernel': 'rbf', 'C': 1.0};
+    options_svm = OptionsSVM(dirModelsBase, options_training.getFilenameOptions(filteroptions=True), options_clf=dict_options_svm)
+    clf_svm = ClassifierSVM(options_svm);
+
+    options_clf = options_rf
+    clf = clf_rf;
 
     results_all_runs_train = Results(dirResultsBase, options_training, options_clf, 'train');
     results_all_runs_eval = Results(dirResultsBase, options_training, options_clf, 'eval');

@@ -6,6 +6,16 @@ from utils.DatasetOptions import DatasetOptions
 from utils.Dataset import Dataset
 
 import helpers.constantsNZ as constantsNZ
+import helpers.helpers as helpers
+
+diag_group_names = helpers.getDKverylightGrouping();
+
+def convertDiagToInd(val):
+    try:
+        ind = diag_group_names.index(val);
+    except ValueError:
+        ind = -1;
+    return ind;
 
 if __name__ == '__main__':
     dirProject = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/';
@@ -13,10 +23,12 @@ if __name__ == '__main__':
     dirResultsBase = dirProject + 'results/';
     dirModelsBase = dirProject + 'classifiers/'
 
-    years = range(2001, 2017);
+    years = range(2012, 2017);
+    balanced = False;
 
     df_all_years = pd.DataFrame()
     for year in years:
+        print('year: ' + str(year))
         dict_options_dataset = {
             'dir_data':             dirData,
             'data_prefix':          'nz',
@@ -29,9 +41,14 @@ if __name__ == '__main__':
 
         options_dataset_year = DatasetOptions(dict_options_dataset);
         dataset_year = Dataset(options_dataset_year);
-        df_balanced_year = dataset_year.getBalancedSubSet();
-        print(df_balanced_year.shape)
-        df_all_years = df_all_years.append(df_balanced_year);
+        if balanced:
+            df_year = dataset_year.getBalancedSubSet();
+        else:
+            df_year = dataset_year.getDf();
+
+        #df_year['main_diag'] = df_year['main_diag'].apply(convertDiagToInd)
+        print(df_year.shape)
+        df_all_years = df_all_years.append(df_year);
 
 
     print('df balanced all years: ' + str(df_all_years.shape))

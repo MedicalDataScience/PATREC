@@ -23,30 +23,27 @@ def main(dict_dataset_options):
     # preproc.processDiagnosisFile();
 
     # preproc.createFeatureSet();
-    # preproc.encodeFeatures();
+    preproc.encodeFeatures();
     preproc.fuse();
 
 
 
 
 if __name__ == '__main__':
-    if len(sys.argv) > 1:
-        year_to_process = int(sys.argv[1]);
-    else:
-        year_to_process = 1988;
 
-    years = [2012]
+    # years = [2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016]
     # years = [2007, 2008, 2009, 2010, 2011]
     # years = [2001, 2002, 2003, 2004, 2005, 2006]
+    years = [2017]
     for year in years:
         dict_dataset_options = {
             'dir_data':             dirData,
             'data_prefix':          'nz',
             'dataset':              str(year),
-            'encoding':             'categorical',
-            'grouping':             'verylightgrouping',
+            'encoding':             'encoding',
+            'grouping':             '16dim',
             'newfeatures':          None,
-            'featurereduction':     {'method': 'ONLYDIAG'}
+            'featurereduction':     {'method': 'FUSION'}
         }
         print('')
         print('processing year: ' + str(year))
