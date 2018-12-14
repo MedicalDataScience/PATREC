@@ -125,8 +125,6 @@ class NeuralNetEstimator:
         tf.reset_default_graph()
         """Build an estimator appropriate for the given model type."""
 
-        print(self.flags.model_dir)
-        print(self.flags.pretrained_model_dir)
         deep_columns = self.feature_columns.buildModelColumns()
 
         # Create a tf.estimator.RunConfig to ensure the model is run on CPU, which

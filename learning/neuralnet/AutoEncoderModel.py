@@ -24,19 +24,28 @@ class AutoEncoderModel():
         self.dataset_options_test = dict_dataset_options['test'];
         self.mode = mode;
 
-        if self.mode == 'train':
-            if not self.dataset_options_eval is None:
-                self.dataset_handler_train = NeuralNetDatasetHandler(self.dataset_options_train, feature_columns, 'train');
-                self.dataset_handler_eval = NeuralNetDatasetHandler(self.dataset_options_eval, feature_columns, 'eval');
-            else:
-                self.dataset_handler_train = NeuralNetDatasetHandler(self.dataset_options_train, feature_columns, 'train');
-                self.dataset_handler_eval = NeuralNetDatasetHandler(self.dataset_options_train, feature_columns, 'eval');
-        elif self.mode == 'test':
-            self.dataset_handler_test = NeuralNetDatasetHandler(self.dataset_options_test, feature_columns, 'test');
-
         self.flags = flags;
         self.model = None;
         self.flags.hidden_units = [int(u) for u in self.flags.hidden_units];
+
+        if self.mode == 'train':
+            self._setModelDir();
+            # Clean up the model directory if present
+            if not self.flags.model_dir == self.flags.pretrained_model_dir:
+                shutil.rmtree(self.flags.model_dir, ignore_errors=True)
+            if not os.path.exists(self.flags.model_dir):
+                os.makedirs(self.flags.model_dir);
+
+        if self.mode == 'train':
+            if not self.dataset_options_eval is None:
+                self.dataset_handler_train = NeuralNetDatasetHandler(self.flags.model_dir, self.dataset_options_train, feature_columns, 'train');
+                self.dataset_handler_eval = NeuralNetDatasetHandler(self.flags.model_dir, self.dataset_options_eval, feature_columns, 'eval');
+            else:
+                self.dataset_handler_train = NeuralNetDatasetHandler(self.flags.model_dir, self.dataset_options_train, feature_columns, 'train');
+                self.dataset_handler_eval = NeuralNetDatasetHandler(self.flags.model_dir, self.dataset_options_train, feature_columns, 'eval');
+        elif self.mode == 'test':
+            self.dataset_handler_test = NeuralNetDatasetHandler(self.flags.model_dir, self.dataset_options_test, feature_columns, 'test');
+
         return;
 
 
@@ -69,17 +78,27 @@ class AutoEncoderModel():
         dataset = dataset.batch(self.flags.batch_size);
         return dataset;
 
-    def _input_fn_eval(self):
-        dataset = self.dataset_handler_eval.readDatasetAE();
+    def _input_fn_analyze(self):
+        diag_group_names = self.dataset_options_train.getDiagGroupNames();
+        features = {'diag': diag_group_names};
+        dataset = tf.data.Dataset.from_tensor_slices((features, features))
         dataset = dataset.repeat(1);
         dataset = dataset.batch(self.flags.batch_size);
         return dataset;
 
-    def _input_fn_test(self):
+
+    def _input_fn_encode_diag(self):
         dataset = self.dataset_handler_test.readDatasetAE();
-        dataset = dataset.repeat(1);
+        dataset = dataset.repeat(self.flags.epochs_between_evals);
         dataset = dataset.batch(self.flags.batch_size);
         return dataset;
+
+    def _input_fn_encode_maindiag(self):
+        dataset = self.dataset_handler_test.getDatasetEncodeMainDiag();
+        dataset = dataset.repeat(self.flags.epochs_between_evals);
+        dataset = dataset.batch(self.flags.batch_size);
+        return dataset;
+
 
 
     def export_model(self):
@@ -97,31 +116,26 @@ class AutoEncoderModel():
 
     def _getModelEstimator(self):
         if self.model is None:
-            if self.mode == 'train':
-                self._setModelDir();
-                # Clean up the model directory if present
-                if not self.flags.model_dir == self.flags.pretrained_model_dir:
-                    shutil.rmtree(self.flags.model_dir, ignore_errors=True)
             self.model = AutoEncoderEstimator(self.feature_columns, self.flags);
 
 
     def createDatasets(self):
         if self.mode == 'train':
             if not self.dataset_options_eval is None:
-                dataset_maker_train = NeuralNetDatasetMaker('train', self.dataset_options_train);
-                dataset_maker_eval = NeuralNetDatasetMaker('eval', self.dataset_options_eval);
+                dataset_maker_train = NeuralNetDatasetMaker('train', self.flags.model_dir, self.dataset_options_train);
+                dataset_maker_eval = NeuralNetDatasetMaker('eval', self.flags.model_dir, self.dataset_options_eval);
                 dataset_maker_train.createDatasetsAutoEncoder();
                 dataset_maker_eval.createDatasetsAutoEncoder();
             else:
-                dataset_maker = NeuralNetDatasetMaker('traineval', self.dataset_options_train);
+                print('model_dir: ' + str(self.flags.model_dir))
+                dataset_maker = NeuralNetDatasetMaker('traineval', self.flags.model_dir, self.dataset_options_train);
                 dataset_maker.createDatasetsAutoEncoder();
         elif self.mode == 'test':
-            dataset_maker = NeuralNetDatasetMaker('test', self.dataset_options_test);
-            dataset_maker.createDatasets();
+            dataset_maker = NeuralNetDatasetMaker('test', self.flags.model_dir, self.dataset_options_test);
+            dataset_maker.createDatasetsAutoEncoder();
 
 
     def train(self):
-
         self.createDatasets();
 
         if self.model is None:
@@ -140,32 +154,44 @@ class AutoEncoderModel():
 
         # Train and evaluate the model every `flags.epochs_between_evals` epochs.
         for n in range(self.flags.train_epochs // self.flags.epochs_between_evals):
-            estimator.train(input_fn=self._input_fn_train)
-            # results = estimator.evaluate(input_fn=self._input_fn_eval)
+            estimator.train(input_fn=self._input_fn_train);
             # Display evaluation metrics
             tf.logging.info('Results at epoch %d / %d', (n + 1) * self.flags.epochs_between_evals, self.flags.train_epochs)
             tf.logging.info('-' * 60)
 
-            # for key in sorted(results):
-            #     tf.logging.info('%s: %s' % (key, results[key]))
-
-            # benchmark_logger.log_evaluation_result(results)
-
-            # if model_helpers.past_stop_threshold(self.flags.stop_threshold, results['accuracy']):
-            #     break;
-
-            # Export the model
-            # print('export the model?')
-            # if n % 10 == 0 and self.flags.export_dir is not None:
-            #     self.export_model()
+            results = estimator.predict(input_fn=self._input_fn_analyze);
+            encodings = [p['encoding'] for p in results];
+            basic_encodings = np.array(encodings);
+            filename_basic_encodings = self.flags.model_dir + '/basic_encodings_' + str(n).zfill(5) + '.npy'
+            np.save(filename_basic_encodings, basic_encodings);
 
 
-    def predict(self):
+    def analyze(self):
         if self.model is None:
             self._getModelEstimator();
         estimator = self.model.getEstimator();
-        results = estimator.predict(input_fn=self._input_fn_test)
-        return results;
+
+        results = estimator.predict(input_fn=self._input_fn_analyze);
+        encodings = [p['encoding'] for p in results];
+        encodings = np.array(encodings);
+        return encodings;
+
+
+    def encode(self):
+        self.createDatasets();
+
+        if self.model is None:
+            self._getModelEstimator();
+        estimator = self.model.getEstimator();
+
+        results_diag = estimator.predict(input_fn=self._input_fn_encode_diag);
+        encodings_diag = [p['encoding'] for p in results_diag];
+        encodings_diag = np.array(encodings_diag);
+
+        results_main_diag = estimator.predict(input_fn=self._input_fn_encode_maindiag);
+        encodings_main_diag = [p['encoding'] for p in results_main_diag];
+        encodings_main_diag = np.array(encodings_main_diag);
+        return [encodings_main_diag, encodings_diag];
 
 
     def getModelDir(self):

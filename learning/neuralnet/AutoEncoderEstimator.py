@@ -6,6 +6,11 @@ import tensorflow as tf
 from tensorflow.python.summary import summary
 
 
+import helpers.helpers as helpers
+
+
+diag_group_names = helpers.getDKverylightGrouping();
+
 class AutoEncoderEstimator:
 
     def __init__(self, feature_columns, flags):
@@ -55,34 +60,39 @@ class AutoEncoderEstimator:
         return output;
 
 
+    # def _getNumericID(self, labels):
+    #     diag_group_names = helpers.getDKverylightGrouping();
+    #     numeric_train_ids = diag_group_names.index(labels)
+    #     return numeric_train_ids;
+
     def _dense_batchnorm_fn(self, features, labels, mode, params):
         """Model function for Estimator."""
         hidden_units = params['hidden_units'];
         dropout = params['dropout']
         batchnorm = params['batchnorm']
         feature_columns = params['feature_columns'];
-        reverse_hidden_units = hidden_units.copy();
+        reverse_hidden_units = hidden_units[:-1].copy();
         reverse_hidden_units.reverse();
 
         encoded = self._encoder(features, hidden_units, mode, dropout, batchnorm, feature_columns);
-        logits = self._decoder(encoded, reverse_hidden_units, mode, dropout, batchnorm, feature_columns);
+        decoded = self._decoder(encoded, reverse_hidden_units, mode, dropout, batchnorm, feature_columns);
+        logits = tf.layers.dense(decoded, len(diag_group_names), activation=tf.nn.relu, name='output');
 
-        # Reshape output layer to 1-dim Tensor to return predictions
-        probabilities = tf.nn.softmax(logits);
-        predictions = tf.round(probabilities);
-        predicted = tf.argmax(predictions, axis=1)
-        # Provide an estimator spec for `ModeKeys.PREDICT`.
+
         if mode == tf.estimator.ModeKeys.PREDICT:
             return tf.estimator.EstimatorSpec(
                 mode=mode,
-                export_outputs={'predict_output': tf.estimator.export.PredictOutput({"Wiederkehrer": predictions,
-                                                                                     'probabilities': probabilities})},
+                export_outputs={'predict_output': tf.estimator.export.PredictOutput({"encoding": encoded })},
                 predictions={
-                    'Wiederkehrer': predictions,
-                    'logits': logits,
-                    'probabilities': probabilities
+                    'encoding': encoded
                 })
-        loss = tf.losses.mean_squared_error(labels=labels, predictions=probabilities);
+
+
+        probabilities = tf.nn.sigmoid(logits);
+        #loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=tf.one_hot(indices=labels, depth=len(diag_group_names)), logits=logits));
+        loss = tf.losses.softmax_cross_entropy(onehot_labels=tf.one_hot(indices=labels, depth=len(diag_group_names)), logits=logits);
+        # loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(labels=tf.one_hot(indices=labels, depth=len(diag_group_names)), logits=logits));
+        # loss = tf.losses.mean_squared_error(labels=tf.one_hot(indices=labels, depth=len(diag_group_names)), predictions=probabilities);
 
         if mode == tf.estimator.ModeKeys.EVAL:
             avg_loss = tf.reduce_mean(loss)
@@ -95,11 +105,9 @@ class AutoEncoderEstimator:
         starter_learning_rate = params['learning_rate'];
         learning_rate = tf.train.exponential_decay(starter_learning_rate, global_step, 1000000, 0.96, staircase=True)
         optimizer = tf.train.AdagradOptimizer(learning_rate=learning_rate);
-        # optimizer = tf.train.ProximalAdagradOptimizer(
-        #    learning_rate=params['learning_rate'],
-        #    l1_regularization_strength=0.001
-        # )
         update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+
+        summary.scalar('learning_rate', learning_rate)
 
         with tf.control_dependencies(update_ops):
             train_op = optimizer.minimize(loss=loss, global_step=global_step)

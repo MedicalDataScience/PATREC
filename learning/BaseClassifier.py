@@ -1,5 +1,6 @@
 
 import os
+import numpy as np
 import sklearn.metrics as metrics
 from sklearn.externals import joblib
 
@@ -67,7 +68,7 @@ class BaseClassifier:
         print('training data: ' + str(df.shape))
         labels = df[early_readmission_flagname].values;
         data = df.drop(early_readmission_flagname, axis=1).values;
-        self.clf.partial_fit(data, labels);
+        self.clf.partial_fit(data, labels, classes=np.unique(labels));
 
 
     def setResults(self, predictions, labels):

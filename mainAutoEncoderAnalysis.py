@@ -20,6 +20,7 @@ from __future__ import print_function
 import sys
 import os
 import shutil
+import string
 
 from absl import app as absl_app
 from absl import flags
@@ -38,6 +39,12 @@ from official.utils.logs import hooks_helper
 from official.utils.logs import logger
 from official.utils.misc import model_helpers
 
+from sklearn.decomposition import PCA
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from sklearn.manifold import TSNE
+
+import matplotlib.pyplot as plt
+import numpy as np
 
 from learning.neuralnet.AutoEncoderModel import AutoEncoderModel
 from learning.neuralnet.FeatureColumnsAutoEncoderNZ import FeatureColumnsAutoEncoderNZ
@@ -61,7 +68,7 @@ def define_flags():
                             batch_size=160)
 
 
-def run_deep(flags_obj):
+def analyze(flags_obj):
     """Run Wide-Deep training and eval loop.
     Args:
     flags_obj: An object containing parsed flag values.
@@ -69,7 +76,7 @@ def run_deep(flags_obj):
     dict_data_train = {
         'dir_data':             DIRPROJECT + 'data/',
         'data_prefix':          'nz',
-        'dataset':              '20012016',
+        'dataset':              '20072016',
         'encoding':             'embedding',
         'newfeatures':          None,
         'featurereduction':     {'method': 'FUSION'},
@@ -90,12 +97,60 @@ def run_deep(flags_obj):
         'test':     None
     }
 
-    nn = AutoEncoderModel('train', dict_dataset_options, feature_columns, flags_obj);
-    nn.train();
+    nn = AutoEncoderModel('analysis', dict_dataset_options, feature_columns, flags_obj);
+    basic_encodings = nn.analyze();
+
+    num_colors = 26;
+    colors = plt.cm.rainbow(np.linspace(0, 1, num_colors));
+
+    pca = PCA(n_components=2)
+    weights_2d_pca = pca.fit_transform(basic_encodings);
+
+    tsne = TSNE(n_components=2);
+    weights_2d_tsne = tsne.fit_transform(basic_encodings);
+
+
+    diag_group_names = dataset_options_train.getDiagGroupNames();
+    num_diags = len(diag_group_names);
+
+    if dataset_options_train.getGroupingName() == 'verylightgrouping':
+        num_subcategories = 100;
+    elif dataset_options_train.getGroupingName() == 'lightgrouping':
+        num_subcategories = 10;
+    elif dataset_options_train.getGroupingName() == 'grouping':
+        num_subcategories = 1;
+    else:
+        print('grouping scheme is unknown...exit')
+        sys.exit()
+
+
+    plt.figure();
+    for k in range(0, num_colors):
+        c = colors[k]
+        plt.scatter(weights_2d_pca[k*num_subcategories:(k*num_subcategories+num_subcategories), 0],
+                    weights_2d_pca[k*num_subcategories:(k*num_subcategories+num_subcategories), 1],
+                    label=string.ascii_uppercase[k], alpha=0.5, s=100, c=c);
+    plt.legend()
+    plt.title('pca')
+    plt.draw()
+
+
+    plt.figure();
+    for k in range(0, num_colors):
+        c = colors[k]
+        plt.scatter(weights_2d_tsne[k*num_subcategories:(k*num_subcategories+num_subcategories), 0],
+                    weights_2d_tsne[k*num_subcategories:(k*num_subcategories+num_subcategories), 1],
+                    label=string.ascii_uppercase[k],alpha=0.5, s=100, c=c);
+    plt.legend()
+    plt.title('t-sne')
+    plt.draw()
+
+    plt.show()
+
 
 
 def main(_):
-    run_deep(flags.FLAGS)
+    analyze(flags.FLAGS)
 
 
 if __name__ == '__main__':

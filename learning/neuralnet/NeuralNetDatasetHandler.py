@@ -9,8 +9,8 @@ from utils.Dataset import Dataset
 
 class NeuralNetDatasetHandler:
 
-    def __init__(self, dataset_options, feature_columns, mode, balanced_datasets=True):
-
+    def __init__(self, dir_model, dataset_options, feature_columns, mode, balanced_datasets=True):
+        self.dir_model = dir_model;
         self.dataset_options = dataset_options;
         self.dataset = Dataset(self.dataset_options);
         self.feature_columns = feature_columns;
@@ -34,21 +34,34 @@ class NeuralNetDatasetHandler:
         # print('Parsing', data_file)
         column_names = self.dataset.getColumnsData();
         default_values = self.feature_columns.getDefaultValues(column_names)
-        columns = tf.decode_csv(value, record_defaults=default_values)
+        columns = tf.decode_csv(value, record_defaults=default_values);
         features = dict(zip(column_names, columns))
-        return features, columns
+        numeric_id_labels = features.pop('main_diag_ind');
+        return features, tf.convert_to_tensor(numeric_id_labels);
+
+
+    def _parse_csv_encode_maindiag(self, value):
+        # print('Parsing', data_file)
+        column_names = self.dataset.getColumnsData();
+        default_values = self.feature_columns.getDefaultValues(column_names)
+        columns = tf.decode_csv(value, record_defaults=default_values);
+        features = dict(zip(column_names, columns))
+        numeric_id_labels = features.pop('main_diag_ind');
+        features = {'diag': features.pop('main_diag')};
+        return features, tf.convert_to_tensor(numeric_id_labels);
 
 
     def _getFilenameDatasetBalanced(self):
         filename_dataset_base = self.dataset_options.getFilename();
+        filename_prefix = self.dir_model + '/' +  filename_dataset_base.split('/')[-1][:-4];
         if self.mode == 'train':
-            filename_train = filename_dataset_base[:-4] + '_balanced_train.csv'
+            filename_train = filename_prefix + '_balanced_train.csv'
             filename = filename_train;
         elif self.mode == 'eval':
-            filename_eval = filename_dataset_base[:-4] + '_balanced_eval.csv'
+            filename_eval = filename_prefix + '_balanced_eval.csv'
             filename = filename_eval;
         elif self.mode == 'test':
-            filename_test = filename_dataset_base[:-4] + '_balanced_test.csv'
+            filename_test = filename_prefix + '_balanced_test.csv'
             filename = filename_test;
         else:
             print('unknown mode...exit')
@@ -58,17 +71,18 @@ class NeuralNetDatasetHandler:
 
     def _getFilenamesDatasetAll(self):
         filename_dataset_base = self.dataset_options.getFilename();
+        filename_prefix = self.dir_model + '/' +  filename_dataset_base.split('/')[-1][:-4];
         if self.mode == 'train':
-            filename_train_pos = filename_dataset_base[:-4] + '_train_pos.csv'
-            filename_train_neg = filename_dataset_base[:-4] + '_train_neg.csv'
+            filename_train_pos = filename_prefix + '_train_pos.csv'
+            filename_train_neg = filename_prefix + '_train_neg.csv'
             filenames = [filename_train_pos, filename_train_neg];
         elif self.mode == 'eval':
-            filename_eval_pos = filename_dataset_base[:-4] + '_eval_pos.csv'
-            filename_eval_neg = filename_dataset_base[:-4] + '_eval_neg.csv'
+            filename_eval_pos = filename_prefix + '_eval_pos.csv'
+            filename_eval_neg = filename_prefix + '_eval_neg.csv'
             filenames = [filename_eval_pos, filename_eval_neg];
         elif self.mode == 'test':
-            filename_test_pos = filename_dataset_base[:-4] + '_test_pos.csv'
-            filename_test_neg = filename_dataset_base[:-4] + '_test_neg.csv'
+            filename_test_pos = filename_prefix + '_test_pos.csv'
+            filename_test_neg = filename_prefix + '_test_neg.csv'
             filenames = [filename_test_pos, filename_test_neg];
         else:
             print('unknown mode...exit')
@@ -78,14 +92,15 @@ class NeuralNetDatasetHandler:
 
     def _getFilenameDatasetAutoEncoder(self):
         filename_dataset_base = self.dataset_options.getFilename();
+        filename_prefix = self.dir_model + '/' + filename_dataset_base.split('/')[-1][:-4];
         if self.mode == 'train':
-            filename_train = filename_dataset_base[:-4] + '_balanced_train.csv'
+            filename_train = filename_prefix + '_balanced_train.csv'
             filename = filename_train;
         elif self.mode == 'eval':
-            filename_eval = filename_dataset_base[:-4] + '_balanced_eval.csv'
+            filename_eval = filename_prefix + '_balanced_eval.csv'
             filename = filename_eval;
         elif self.mode == 'test':
-            filename_test = filename_dataset_base[:-4] + '_balanced_test.csv'
+            filename_test = filename_prefix + '_test.csv'
             filename = filename_test;
         else:
             print('unknown mode...exit')
@@ -168,12 +183,28 @@ class NeuralNetDatasetHandler:
             return dataset;
 
 
+    def _dataset_reader_encode_main_diag(self):
+        filename_dataset = self._getFilenameDatasetAutoEncoder();
+        print(filename_dataset)
+        # shuffle is only performed for training; not optimal --> maybe five another flag to specify training/eval
+        dataset = tf.data.TextLineDataset(filename_dataset)
+        dataset = dataset.skip(1)
+        if self.mode == 'train':
+            dataset = dataset.shuffle(buffer_size=self.dataset.getNumSamples())
+        dataset = dataset.map(self._parse_csv_encode_maindiag, num_parallel_calls=5)
+        return dataset;
+
+
     def readDatasetTF(self):
         return self._dataset_reader();
 
 
     def readDatasetAE(self):
         return self._dataset_reader_autoencoder();
+
+
+    def getDatasetEncodeMainDiag(self):
+        return self._dataset_reader_encode_main_diag();
 
 
 
