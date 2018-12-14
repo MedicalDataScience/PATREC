@@ -63,7 +63,8 @@ EARLY_READMISSION_FLAG = 'early_readmission_flag'
 EARLY_READMISSION_VALUES = ['N', 'Y'];
 
 EVENT_FLAG = 'event_id';
-
+HAUPTDIAGNOSE = 'main_diag';
+NEBENDIAGNOSE = 'diag'
 NUMERICAL = ['los', 'age_dsch'];
 
 COLUMNS_TO_REMOVE_FOR_CLASSIFIER = ['unique_patient_identifier', 'event_id']

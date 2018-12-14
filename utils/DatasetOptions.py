@@ -5,6 +5,9 @@ from utils.BaseDatasetOptions import BaseDatasetOptions
 import helpers.constants as constantsPATREC
 import helpers.constantsNZ as constantsNZ
 
+import helpers.helpers as helpers
+import helpers.icd10_chapters as icd10_chapters
+
 class DatasetOptions(BaseDatasetOptions):
 
     def __init__(self, options):
@@ -44,8 +47,8 @@ class DatasetOptions(BaseDatasetOptions):
                 self.encoding = options['encoding'];
             if 'options_encoding' in options.keys():
                 self.options_encoding = options['options_encoding'];
-            if 'options_filtering' in options.keys():
-                self.options_filtering = options['options_filtering'];
+            if 'filtering' in options.keys():
+                self.options_filtering = options['filtering'];
 
         self.filename_options = self._getFilenameOptions(filteroptions=False);
         self.filename = self._getFilename();
@@ -103,6 +106,25 @@ class DatasetOptions(BaseDatasetOptions):
         elif self.data_prefix == 'nz':
             return constantsNZ.EARLY_READMISSION_FLAG;
 
+
+    def getNameMainDiag(self):
+        if self.data_prefix == 'patrec':
+            return constantsPATREC.HAUPTDIAGNOSE;
+        elif self.data_prefix == 'nz':
+            return constantsNZ.HAUPTDIAGNOSE;
+        else:
+            print('data prefix is unknown...exit')
+            sys.exit();
+
+    def getNameSecDiag(self):
+        if self.data_prefix == 'patrec':
+            return constantsPATREC.NEBENDIAGNOSE;
+        elif self.data_prefix == 'nz':
+            return constantsNZ.NEBENDIAGNOSE;
+        else:
+            print('data prefix is unknown...exit')
+            sys.exit();
+
     def getAdminFeatureNames(self):
         if self.data_prefix == 'patrec':
             return constantsPATREC.ADMIN_FEATURES_NAMES.copy();
@@ -136,6 +158,18 @@ class DatasetOptions(BaseDatasetOptions):
             sys.exit();
 
 
+    def getDiagGroupNames(self):
+        if self.grouping == 'verylightgrouping':
+            group_names = helpers.getDKverylightGrouping();
+        elif self.grouping == 'lightgrouping':
+            group_names = helpers.getDKlightGrouping();
+        elif self.grouping == 'grouping':
+            group_names = helpers.getDKgrouping();
+        else:
+            group_names = [];
+        return group_names;
+
+
     def getColumnsToRemove(self):
         if self.data_prefix == 'patrec':
             return constantsPATREC.COLUMNS_TO_REMOVE_FOR_CLASSIFIER;
@@ -143,6 +177,36 @@ class DatasetOptions(BaseDatasetOptions):
             return constantsNZ.COLUMNS_TO_REMOVE_FOR_CLASSIFIER;
 
 
+    def getDiseaseICDkeys(self):
+        if self.options_filtering == 'cardiovascular':
+            keys = icd10_chapters.getCodesMainGroup('I00-I99');
+        elif self.options_filtering == 'oncology':
+            keys1 = icd10_chapters.getCodesSubgroup('C00-D48', 'C00-C97');
+            keys2 = icd10_chapters.getCodesSubgroup('C00-D48', 'D00-D09');
+            keys = keys1+keys2;
+        elif self.options_filtering == 'chronic_lung':
+            keys1 = icd10_chapters.getCodesSubgroup('J00-J99', 'J30-J39')
+            keys2 = icd10_chapters.getCodesSubgroup('J00-J99', 'J40-J47')
+            keys3 = icd10_chapters.getCodesSubgroup('J00-J99', 'J60-J70')
+            keys4 = icd10_chapters.getCodesSubgroup('J00-J99', 'J80-J84')
+            keys5 = icd10_chapters.getCodesSubgroup('J00-J99', 'J85-J86')
+            keys6 = icd10_chapters.getCodesSubgroup('J00-J99', 'J90-J94')
+            keys7 = icd10_chapters.getCodesSubgroup('J00-J99', 'J95-J99')
+            keys = keys1+keys2+keys3+keys4+keys5+keys6+keys7;
+        else:
+            print('unknown disease...exit')
+            sys.exit()
+        return keys;
+
+
+    def getDiseaseNames(self):
+        if self.data_prefix == 'patrec':
+            return constantsPATREC.DISEASES.copy();
+        elif self.data_prefix == 'nz':
+            return constantsNZ.DISEASES.copy();
+        else:
+            print('unknown dataset...exit')
+            sys.exit();
 
 
     # def getLOSState(self):

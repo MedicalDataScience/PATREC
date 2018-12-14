@@ -38,6 +38,8 @@ SUBGROUPS = ['OE', 'DK', 'CHOP']
 NUM_DAYS_READMISSION = 18;
 EARLY_READMISSION_FLAG = 'Wiederkehrer';
 EVENT_FLAG = 'Fall';
+HAUPTDIAGNOSE = 'Hauptdiagnose';
+NEBENDIAGNOSE = 'DK'
 
 NEW_FEATURES = ['previous_visits', 'ratio_los_age', 'ratio_numDK_age', 'ratio_los_numDK', 'ratio_numCHOP_age',
                     'ratio_los_numOE', 'ratio_numOE_age', 'mult_los_numCHOP', 'mult_equalOE_numDK',
@@ -56,6 +58,7 @@ LIEGESTATUS_FEATURES = ['Liegestatus', 'Langlieger']
 
 FUSION_FEATURES = ['Fall', 'Geschlecht', 'Eintrittsalter', 'Hauptdiagnose', 'Verweildauer'] + NEW_FEATURES_FUSION;
 
+DISEASES = ['cardiovascular', 'oncology', 'chronic_lung']
 
 MDC = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z', '9'];
 

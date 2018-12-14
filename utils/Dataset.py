@@ -16,10 +16,15 @@ class Dataset:
         return;
 
 
-    # maybe stop creating separate files for filtered datasets and just create the df on the flyx
+    # maybe stop creating separate files for filtered datasets and just create the df on the fly
     def _filterData(self):
+        diseases = self.options.getDiseaseNames();
         filter = DatasetFilter(self.options)
-        self.df = filter.filterDataBinaryColumns(self.options.getOptionsFiltering())
+        options_filtering = self.options.getOptionsFiltering();
+        if options_filtering in diseases:
+            self.df = filter.filterDataDisease();
+        else:
+            self.df = filter.filterDataBinaryColumns(options_filtering)
 
 
     def _getDf(self):
@@ -27,7 +32,7 @@ class Dataset:
             self._filterData();
         else:
             filename = self.options.getFilename()
-            df = pd.read_csv(filename, nrows=50000);
+            df = pd.read_csv(filename);
             self.df = df;
     
 

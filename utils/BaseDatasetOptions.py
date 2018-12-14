@@ -32,11 +32,12 @@ class BaseDatasetOptions:
 
         str = str + '_' + self.encoding;
         if self.options_encoding is not None:
-            str = str + self.options_grouping;
+            str = str + self.options_encoding;
 
-        str = str + '_' + self.grouping;
-        if self.options_grouping is not None:
-            str = str + self.options_grouping;
+        if self.grouping is not None:
+            str = str + '_' + self.grouping;
+            if self.options_grouping is not None:
+                str = str + self.options_grouping;
 
         if filteroptions:
             if self.options_filtering is not None:
