@@ -31,41 +31,61 @@ class DataAnalyzer:
         df_feature_normal = df_feature.loc[df['Wiederkehrer'] == 0];
         return [df_feature_normal, df_feature_wiederkehrer];
 
+    def _filterDFdisease(self, feature_name, feature_categories, df_feature_normal, df_feature_wiederkehrer):
+        print(df_feature_wiederkehrer.shape)
+        print(df_feature_normal.shape)
+        series_normal = [];
+        series_wiederkehrer = [];
+        for cat in feature_categories:
+            series_normal.append(df_feature_normal[feature_name + '_' + cat]);
+            series_wiederkehrer.append(df_feature_wiederkehrer[feature_name + '_' + cat]);
+
+        df_feature_normal_filtered = pd.concat(series_normal, axis=1);
+        df_feature_wiederkehrer_filtered = pd.concat(series_wiederkehrer, axis=1);
+        return [df_feature_normal_filtered, df_feature_wiederkehrer_filtered];
+
 
     # for categorical features
     def _doComparisonBar(self, df, name_feature):
         filename_plot = self.dir_plots + 'featurecomparison_' + name_feature + '.png';
         print(name_feature)
         categories_feature = self.dataset_options.getFeatureCategories(name_feature);
+        if name_feature == self.dataset_options.getNameMainDiag():
+            if self.dataset_options.getOptionsFiltering() in self.dataset_options.getDiseaseNames():
+                categories_feature = self.dataset_options.getDiseaseICDkeys();
         print(categories_feature)
         values_to_count = range(0, len(categories_feature));
 
         [df_feature_normal, df_feature_wiederkehrer] = self._getFeatureValues(df, name_feature);
-        num_feature_normal = df_feature_normal.shape[0];
-        num_feature_wiederkehrer = df_feature_wiederkehrer.shape[0];
-        occ_feature_wiederkehrer = df_feature_wiederkehrer.sum(axis=0);
-        occ_feature_normal = df_feature_normal.sum(axis=0);
+        if df_feature_wiederkehrer.shape[1] > 0 and df_feature_normal.shape[1] > 0:
+            if name_feature == self.dataset_options.getNameMainDiag():
+                if self.dataset_options.getOptionsFiltering() in self.dataset_options.getDiseaseNames():
+                    [df_feature_normal, df_feature_wiederkehrer] = self._filterDFdisease(name_feature, categories_feature, df_feature_normal, df_feature_wiederkehrer);
+            num_feature_normal = df_feature_normal.shape[0];
+            num_feature_wiederkehrer = df_feature_wiederkehrer.shape[0];
+            occ_feature_wiederkehrer = df_feature_wiederkehrer.sum(axis=0);
+            occ_feature_normal = df_feature_normal.sum(axis=0);
 
-        self._printValues(categories_feature, occ_feature_wiederkehrer, occ_feature_normal);
+            self._printValues(categories_feature, occ_feature_wiederkehrer, occ_feature_normal);
 
-        occ_wiederkehrer = occ_feature_wiederkehrer.values;
-        occ_normal = occ_feature_normal.values;
-        density_normal = occ_normal / float(num_feature_normal);
-        density_wiederkehrer = occ_wiederkehrer / float(num_feature_wiederkehrer);
+            occ_wiederkehrer = occ_feature_wiederkehrer.values;
+            occ_normal = occ_feature_normal.values;
+            density_normal = occ_normal / float(num_feature_normal);
+            density_wiederkehrer = occ_wiederkehrer / float(num_feature_wiederkehrer);
 
-        print(len(values_to_count))
-        print(density_wiederkehrer.shape)
+            print(len(values_to_count))
+            print(density_wiederkehrer.shape)
 
-        fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(14, 10));
-        plt.bar(values_to_count, height=density_wiederkehrer.flatten(), width=1.0, align='center', color='b', alpha=0.5)
-        plt.bar(values_to_count, height=density_normal.flatten(), width=1.0, align='center', color='m', alpha=0.5)
-        plt.xlim([-1, len(categories_feature) + 1])
-        plt.xticks(range(0, len(values_to_count)), categories_feature)
-        plt.legend(['Wiederkehrer', 'normal'])
-        plt.title(name_feature);
-        plt.draw()
-        plt.savefig(filename_plot, format='png')
-        plt.close();
+            fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(14, 10));
+            plt.bar(values_to_count, height=density_wiederkehrer.flatten(), width=1.0, align='center', color='b', alpha=0.5)
+            plt.bar(values_to_count, height=density_normal.flatten(), width=1.0, align='center', color='m', alpha=0.5)
+            plt.xlim([-1, len(categories_feature) + 1])
+            plt.xticks(range(0, len(values_to_count)), categories_feature)
+            plt.legend(['Wiederkehrer', 'normal'])
+            plt.title(name_feature);
+            plt.draw()
+            plt.savefig(filename_plot, format='png')
+            plt.close();
 
 
     # for numerical features
@@ -74,57 +94,61 @@ class DataAnalyzer:
         print(name_feature)
 
         [df_feature_normal, df_feature_wiederkehrer] = self._getFeatureValues(df, name_feature);
-        num_values_normal = df_feature_normal.shape[0];
-        num_values_wiederkehrer = df_feature_wiederkehrer.shape[0];
-        values_wiederkehrer = df_feature_wiederkehrer.values;
-        values_normal = df_feature_normal.values;
+        if df_feature_wiederkehrer.shape[1] > 0 and df_feature_normal.shape[1] > 0:
+            num_values_normal = df_feature_normal.shape[0];
+            num_values_wiederkehrer = df_feature_wiederkehrer.shape[0];
+            values_wiederkehrer = df_feature_wiederkehrer.values;
+            values_normal = df_feature_normal.values;
 
-        if num_values_normal > 0 and num_values_wiederkehrer > 0:
-            min_value = float(min(min(values_normal), min(values_wiederkehrer)));
-            max_value = float(max(max(values_normal), max(values_wiederkehrer)));
-        elif num_values_wiederkehrer > 0:
-            min_value = float(min(values_wiederkehrer));
-            max_value = float(max(values_wiederkehrer));
-        elif num_values_normal > 0:
-            min_value = float(min(values_normal));
-            max_value = float(max(values_normal));
-        else:
-            pass;
+            print('normal: ' + str(df_feature_normal.shape))
+            print('normal: ' + str(df_feature_wiederkehrer.shape))
 
-        num_different_values = np.unique(np.vstack([values_wiederkehrer, values_normal])).shape[0];
-        if num_different_values > 100:
-            num_bins_hist = 100;
-        else:
-            num_bins_hist = num_different_values;
+            if num_values_normal > 0 and num_values_wiederkehrer > 0:
+                min_value = float(min(min(values_normal), min(values_wiederkehrer)));
+                max_value = float(max(max(values_normal), max(values_wiederkehrer)));
+            elif num_values_wiederkehrer > 0:
+                min_value = float(min(values_wiederkehrer));
+                max_value = float(max(values_wiederkehrer));
+            elif num_values_normal > 0:
+                min_value = float(min(values_normal));
+                max_value = float(max(values_normal));
+            else:
+                pass;
 
-        print('min value: ' + str(min_value))
-        print('max value: ' + str(max_value))
+            num_different_values = np.unique(np.vstack([values_wiederkehrer, values_normal])).shape[0];
+            if num_different_values > 100:
+                num_bins_hist = 100;
+            else:
+                num_bins_hist = num_different_values;
 
-        range_hist = [min_value, max_value]
-        # print(bins_hist)
-        hist_feature_wiederkehrer, bins_wiederkehrer = np.histogram(values_wiederkehrer, range=range_hist, bins=num_bins_hist, density=True);
-        hist_feature_normal, bins_normal = np.histogram(values_normal, range=range_hist, bins=num_bins_hist, density=True);
-        hist_feature_wiederkehrer = hist_feature_wiederkehrer / hist_feature_wiederkehrer.sum()
-        hist_feature_normal = hist_feature_normal / hist_feature_normal.sum()
+            print('min value: ' + str(min_value))
+            print('max value: ' + str(max_value))
 
-        bar_width_wiederkehrer = bins_wiederkehrer[1:] - bins_wiederkehrer[:-1];
-        bar_width_normal = bins_normal[1:] - bins_normal[:-1];
+            range_hist = [min_value, max_value]
+            # print(bins_hist)
+            hist_feature_wiederkehrer, bins_wiederkehrer = np.histogram(values_wiederkehrer, range=range_hist, bins=num_bins_hist, density=True);
+            hist_feature_normal, bins_normal = np.histogram(values_normal, range=range_hist, bins=num_bins_hist, density=True);
+            hist_feature_wiederkehrer = hist_feature_wiederkehrer / hist_feature_wiederkehrer.sum()
+            hist_feature_normal = hist_feature_normal / hist_feature_normal.sum()
 
-        fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(14, 10));
-        plt.bar(bins_wiederkehrer[:-1], height=hist_feature_wiederkehrer, width=bar_width_wiederkehrer, align='edge', color='b', alpha=0.5)
-        plt.bar(bins_normal[:-1], height=hist_feature_normal, width=bar_width_normal, align='edge', color='m', alpha=0.5)
-        plt.legend(['Wiederkehrer', 'normal'])
-        plt.title(name_feature);
-        plt.draw()
-        plt.savefig(filename_plot, format='png')
-        plt.close();
+            bar_width_wiederkehrer = bins_wiederkehrer[1:] - bins_wiederkehrer[:-1];
+            bar_width_normal = bins_normal[1:] - bins_normal[:-1];
+
+            fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(14, 10));
+            plt.bar(bins_wiederkehrer[:-1], height=hist_feature_wiederkehrer, width=bar_width_wiederkehrer, align='edge', color='b', alpha=0.5)
+            plt.bar(bins_normal[:-1], height=hist_feature_normal, width=bar_width_normal, align='edge', color='m', alpha=0.5)
+            plt.legend(['Wiederkehrer', 'normal'])
+            plt.title(name_feature);
+            plt.draw()
+            plt.savefig(filename_plot, format='png')
+            plt.close();
 
     # ideal would be to automatically select the comparison type from the feature name
     # would need to give a flag with the feature name
     # i dont know if that would be practical in the long run
     # but like this it is not ideal either
     def doFeatureComparison(self):
-        df = self.dataset.getData();
+        df = self.dataset.getDf();
 
         df_wiederkehrer = df['Wiederkehrer']
         print('num_wiederkehrer: ' + str(df_wiederkehrer.sum(axis=0)));
@@ -165,7 +189,7 @@ class DataAnalyzer:
         self._doComparisonBar(df, 'Eintrittsart');
         self._doComparisonBar(df, 'Liegestatus');
         self._doComparisonBar(df, 'Hauptdiagnose');
-        self._doComparisonBar(df, 'CHOP');
+        # self._doComparisonBar(df, 'CHOP');
 
 
     def _getRatioWiederkehrerFlag(self):
