@@ -91,7 +91,7 @@ class DataPreparer:
         event_column_name = self.options.getEventColumnName();
 
         sub = 'diag';
-        diag_group_names = helpers.getDKverylightGrouping();
+        diag_group_names = self.options.getDiagGroupNames();
         strFilenameInSubGroup = dataset + '_' + sub + '_' + grouping;
         filename_data_subgroup = dir_data + 'data_' + data_prefix + '_' + strFilenameInSubGroup + '.csv';
         print(filename_data_subgroup)
@@ -136,6 +136,36 @@ class DataPreparer:
         df_fused = self.__fuseSplittedColumnsString(df);
         return df_fused;
 
+
+    def __fuseSubgroupsEncodings(self, df):
+        dir_data = self.options.getDirData();
+        data_prefix = self.options.getDataPrefix();
+        dataset = self.options.getDatasetName();
+        subgroups = self.options.getSubgroups();
+        grouping = self.options.getGroupingName();
+        event_column_name = self.options.getEventColumnName();
+        name_main_diag = self.options.getNameMainDiag();
+        subgroups = subgroups + [name_main_diag];
+
+        for sub in subgroups:
+            strFilenameInSubGroup = dataset + '_' + sub + '_' + grouping;
+            filename_data_subgroup = dir_data + 'data_' + data_prefix + '_' + strFilenameInSubGroup + '.csv';
+            print(filename_data_subgroup)
+            subgroup_df = pd.read_csv(filename_data_subgroup);
+            # subgroup_df = subgroup_df.drop(event_column_name, axis=1);
+            group_names = list(subgroup_df.columns);
+            print('num group names: ' + str(len(group_names)))
+            group_names.pop(group_names.index(event_column_name))
+            #check if an unnamed column exist, if so -> remove
+            subgroup_df = subgroup_df.drop(subgroup_df.columns[subgroup_df.columns.str.contains('unnamed', case=False)], axis=1)
+            print(list(subgroup_df.columns))
+            df = pd.merge(df, subgroup_df, on=self.options.getEventColumnName())
+            print('df.shape: ' + str(df.shape))
+        return df;
+
+
+
+
     def fuseSubgroups(self):
         encoding = self.options.getEncodingScheme();
         dir_data = self.options.getDirData();
@@ -146,7 +176,9 @@ class DataPreparer:
         [filename_in_str, filename_out_str] = self.__getFilenameOptionStr()
         filename_data_out = dir_data + 'data_' + data_prefix + '_' + filename_out_str + '.csv';
         filename_data_in = dir_data + 'data_' + data_prefix + '_' + filename_in_str + '.csv';
-        if not featurereduction['method'] == 'ONLYDIAG':
+        if featurereduction is None:
+            df_base = pd.read_csv(filename_data_in);
+        elif not featurereduction['method'] == 'ONLYDIAG':
             df_base = pd.read_csv(filename_data_in);
 
         if encoding == 'embedding':
@@ -161,6 +193,8 @@ class DataPreparer:
                     df_finish = self.__fuseSubgroupsCategories(df_base);
             else:
                 df_finish = self.__fuseSubgroupsCategories(df_base);
+        elif encoding == 'encoding':
+            df_finish = self.__fuseSubgroupsEncodings(df_base);
         else:
             print('encoding scheme is not known...maybe not yet implemented..')
             sys.exit();

@@ -26,19 +26,11 @@ class PreprocessorNZ():
     def _build_diagnosis_code_set(self, header_mode):
         ret_list = list()
         ret_list.append(constants.DIAGNOSIS_COUNT)
-
+        grouping = self.options.getGroupingName();
         if header_mode == constants.HEADER_MODE_COMPRESS:
-            dk_grouping = helpers.getDKverylightGrouping();
+            dk_grouping = self.options.getDiagGroupNames();
             for dk in dk_grouping:
                 ret_list.append(str(dk))
-        # # Always append main diagnosis columns
-        # for code in range(ord("A"), ord("Z") + 1):
-        #     # ret_list.append(constants.DIAGNOSIS_PREFIX + chr(code) + constants.DIAGNOSIS_MAIN)
-        #
-        #     # Only add other diagnosis columns if in compressed mode
-        #
-        #         for i in range(0, 10):
-        #             ret_list.append(constants.DIAGNOSIS_PREFIX + chr(code) + str(i))
 
         # If in original header mode, add one column for each ICD10v8 code
         if header_mode == constants.HEADER_MODE_ORIGINAL:
@@ -61,15 +53,15 @@ class PreprocessorNZ():
         return data_frame
 
     def _remove_duplicate_clin_cd_codes(self, data_frame):
+        print('data_frame.shape: ' + str(data_frame.shape))
         clin_systems = data_frame['CLIN_SYS'].unique()
         print('remove_duplicate_clin_cd_codes : Detected {} code systems'.format(clin_systems))
 
         if len(clin_systems) > 1:
             print('remove_duplicate_clin_cd_codes : Removing old codes...')
-
             # Here, we want to eliminate rows where the CLIN_SYS value is not equal to the SUB_SYS value
             data_frame = data_frame[data_frame.CLIN_SYS == data_frame.SUB_SYS]
-
+        print('data_frame.shape: ' + str(data_frame.shape))
         return data_frame
 
 
@@ -88,6 +80,9 @@ class PreprocessorNZ():
                 clin_cd = self.conversion_helper.convert_icd9_to_icd10(clin_cd, diag_typ)
             elif clin_sys == constants.CLIN_SYS_ICD10_6:
                 clin_cd = self.conversion_helper.convert_icd10_6_to_icd10_8(clin_cd)
+            else:
+                print('unknown sys code...exit')
+                sys.exit();
         except KeyError:
             print("KeyError encountered for old ICD code {}. Skipping...".format(clin_cd), file=sys.stderr)
             return None;
@@ -112,6 +107,16 @@ class PreprocessorNZ():
 
     def _process_diagnoses_loop(self, curr_disc_df, curr_diag_df, header_mode):
         disc_indices = curr_disc_df.index.values
+        grouping = self.options.getGroupingName();
+        if grouping == 'verylightgrouping':
+            dk_grouping_ind = 3;
+        elif grouping == 'lightgrouping':
+            dk_grouping_ind = 2;
+        elif grouping == 'grouping':
+            dk_grouping_ind = 1;
+        else:
+            print('grouping is unknown...exit');
+            sys.exit();
 
         for disc_index in disc_indices:
             # Find rows in the diagnosis table corresponding to this event
@@ -128,7 +133,7 @@ class PreprocessorNZ():
                 # If header mode is compressed
                 if header_mode == constants.HEADER_MODE_COMPRESS:
                     # Get the first two characters of the clin_cd value
-                    code_grouping = clin_cd[:3]
+                    code_grouping = clin_cd[:dk_grouping_ind]
 
                     # Increment the associated fields
                     if diag_typ != constants.DIAG_TYP_MAIN:
