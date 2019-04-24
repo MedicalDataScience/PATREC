@@ -109,8 +109,6 @@ class Results:
     def _getStrFilenameResultsTest(self):
         strFilenameDatasetTraining = self.training_dataset_options.getFilenameOptions(filteroptions=True);
         strFilenameDatasetTesting = self.testing_dataset_options.getFilenameOptions(filteroptions=True);
-        print(strFilenameDatasetTraining)
-        print(strFilenameDatasetTesting)
         strFilenameClassifier = self.classifier_options.getFilenameOptions();
         strFilenameResults = self.results_type + '_' + strFilenameDatasetTraining + '_' + strFilenameDatasetTesting + '_' + strFilenameClassifier;
         return strFilenameResults;

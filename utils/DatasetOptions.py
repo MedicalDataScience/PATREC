@@ -209,9 +209,6 @@ class DatasetOptions(BaseDatasetOptions):
             sys.exit();
 
 
-    def getCategoricalFeatures(self):
-        return self.features_categorical;
-
     # def getLOSState(self):
     #     return constants.getLOSState();
     #
