@@ -1,4 +1,4 @@
-
+import os
 import pandas as pd
 import numpy as np
 from utils.DatasetFilter import DatasetFilter
@@ -28,13 +28,16 @@ class Dataset:
 
 
     def _getDf(self):
-        if self.options.getOptionsFiltering() is not None:
-            self._filterData();
-        else:
-            filename = self.options.getFilename()
+        filename = self.options.getFilename()
+        if os.path.exists(filename):
+            print('get DF...')
             df = pd.read_csv(filename);
             self.df = df;
-    
+            print('DONE!')
+        else:
+            if self.options.getOptionsFiltering() is not None:
+                self._filterData();
+
 
     def _getColumnsDf(self):
         cols = list(self.df.columns);
@@ -61,21 +64,33 @@ class Dataset:
     def _normalizeNumericalColumns(self):
         if self.columns_data is None:
             self._getColumnsData();
+        categorical_feature_names = list(self.options.getCategoricalFeatures().keys());
         for feat in self.columns_data:
-            max_value = self.data[feat].max()
-            min_value = self.data[feat].min()
-            if not max_value == min_value:
-                self.data[feat] = (self.data[feat] - min_value) / (max_value - min_value)
+            normalize_feat = True;
+            for cat in categorical_feature_names:
+                if feat.startswith(cat) or feat.startswith('OE') or feat.startswith('DK') or feat.startswith('CHOP'):
+                    normalize_feat = False;
+                    break;
+
+            if normalize_feat:
+                max_value = self.data[feat].max()
+                min_value = self.data[feat].min()
+                if not max_value == min_value:
+                    self.data[feat] = (self.data[feat] - min_value) / (max_value - min_value)
 
 
     def _getData(self):
+        print('get data...')
         if self.df is None:
             self._getDf();
         self.data = self.df.copy();
         self.data = self.data.fillna(0.0);
+        print('remove not needed columns...')
         self._removeNotNeededColumns();
+        print('normalize columns...')
         if self.options.getEncodingScheme() == 'categorical':
             self._normalizeNumericalColumns();
+        print('get data...: DONE!')
 
 
     def _splitData(self):
@@ -130,8 +145,6 @@ class Dataset:
 
 
     def getColumnsData(self):
-        if self.data is None:
-            self._getData();
         if self.columns_data is None:
             self._getColumnsData();
         return self.columns_data;

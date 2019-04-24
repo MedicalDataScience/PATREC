@@ -1,0 +1,304 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="45c6e9df-ab43-4470-b81c-0bb7908b750f" name="Default" comment="" />
+    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileEditorManager">
+    <leaf>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/mainResultsAnalysis.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="781">
+              <caret line="230" column="45" lean-forward="true" selection-start-line="230" selection-start-column="45" selection-end-line="230" selection-end-column="45" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/mainTrainClassifier.py">
+          <provider selected="true" editor-type-id="text-editor" />
+        </entry>
+      </file>
+    </leaf>
+  </component>
+  <component name="FindInProjectRecents">
+    <findStrings>
+      <find>__splitDataTrainingTestingAll</find>
+      <find>__splitDatasetIntoTrainingTestingAll</find>
+      <find>splitDatasetIntoTrainingTesting</find>
+      <find>shutil</find>
+      <find>filename</find>
+      <find>_getFilename</find>
+      <find>self.dataset</find>
+      <find>dataset_options</find>
+      <find>learning</find>
+      <find>_build</find>
+      <find>columns</find>
+      <find>_parse_csv</find>
+      <find>self.model</find>
+      <find>ratio</find>
+      <find>loss</find>
+      <find>helpers</find>
+      <find>DK</find>
+      <find>_setModelDir</find>
+      <find>self.mode</find>
+      <find>model_dir</find>
+      <find>_dense_batchnorm_fn</find>
+      <find>_parse_csv_autoencoder</find>
+      <find>_getNumericIDs</find>
+      <find>_input_fn_train</find>
+      <find>grouping</find>
+      <find>_convert_diag_code</find>
+      <find>_get_main_diag</find>
+      <find>removing old</find>
+      <find>num_subcategories</find>
+      <find>plotDifferentClassifiers</find>
+    </findStrings>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="IdeDocumentHistory">
+    <option name="CHANGED_PATHS">
+      <list>
+        <option value="$PROJECT_DIR$/learning/neuralnet/FeatureColumnsPatrecFusion.py" />
+        <option value="$PROJECT_DIR$/learning/ClassifierNN.py" />
+        <option value="$PROJECT_DIR$/mainDatasetSplitter.py" />
+        <option value="$PROJECT_DIR$/utils/DatasetSplitter.py" />
+        <option value="$PROJECT_DIR$/mainAnalyzeEmbeddingWeights.py" />
+        <option value="$PROJECT_DIR$/mainPreprocessing.py" />
+        <option value="$PROJECT_DIR$/analyzing/DataAnalyzer.py" />
+        <option value="$PROJECT_DIR$/mainDataAnalysis.py" />
+        <option value="$PROJECT_DIR$/mainTestClassifier.py" />
+        <option value="$PROJECT_DIR$/learning/neuralnet/NeuralNetDataasetHandler.py" />
+        <option value="$PROJECT_DIR$/mainNeuralNetworkTraining.py" />
+        <option value="$PROJECT_DIR$/learning/neuralnet/NeuralNetModel.py" />
+        <option value="$PROJECT_DIR$/mainNeuralNetworkTesting.py" />
+        <option value="$PROJECT_DIR$/learning/neuralnet/AutoEncoder.py" />
+        <option value="$PROJECT_DIR$/learning/neuralnet/FeatureColumnsNZicd.py" />
+        <option value="$PROJECT_DIR$/learning/neuralnet/FeatureColumnsNZFusion.py" />
+        <option value="$PROJECT_DIR$/learning/neuralnet/AutoEncoderDatasetMaker.py" />
+        <option value="$PROJECT_DIR$/mainNeuralNetworkTrainingNZ.py" />
+        <option value="$PROJECT_DIR$/preprocessing/FeatureReducer.py" />
+        <option value="$PROJECT_DIR$/learning/neuralnet/NeuralNetEstimator.py" />
+        <option value="$PROJECT_DIR$/learning/BaseClassifier.py" />
+        <option value="$PROJECT_DIR$/learning/ClassifierSGD.py" />
+        <option value="$PROJECT_DIR$/mainTrainIterativeClassifier.py" />
+        <option value="$PROJECT_DIR$/analyzing/ResultsAnalyzer.py" />
+        <option value="$PROJECT_DIR$/utils/Dataset.py" />
+        <option value="$PROJECT_DIR$/mainAutoEncoderTest.py" />
+        <option value="$PROJECT_DIR$/mainAutoEncoderTesting.py" />
+        <option value="$PROJECT_DIR$/mainAutoEncoderAnalysis.py" />
+        <option value="$PROJECT_DIR$/batch_job_nzdata.sh" />
+        <option value="$PROJECT_DIR$/mainCreateFusedDatasetNZ.py" />
+        <option value="$PROJECT_DIR$/helpers/constants.py" />
+        <option value="$PROJECT_DIR$/helpers/constantsNZ.py" />
+        <option value="$PROJECT_DIR$/utils/BaseDatasetOptions.py" />
+        <option value="$PROJECT_DIR$/utils/DatasetOptions.py" />
+        <option value="$PROJECT_DIR$/learning/neuralnet/AutoEncoderEstimator.py" />
+        <option value="$PROJECT_DIR$/preprocessing/FeatureEncoder.py" />
+        <option value="$PROJECT_DIR$/preprocessing/DataPreparer.py" />
+        <option value="$PROJECT_DIR$/preprocessing/PreprocessorNZ.py" />
+        <option value="$PROJECT_DIR$/learning/neuralnet/NeuralNetDatasetHandler.py" />
+        <option value="$PROJECT_DIR$/learning/neuralnet/NeuralNetDatasetMaker.py" />
+        <option value="$PROJECT_DIR$/learning/neuralnet/AutoEncoderModel.py" />
+        <option value="$PROJECT_DIR$/mainPreprocessingNZ.py" />
+        <option value="$PROJECT_DIR$/mainAutoEncoderDataEncoding.py" />
+        <option value="$PROJECT_DIR$/mainTrainClassifier.py" />
+        <option value="$PROJECT_DIR$/learning/ClassifierSVM.py" />
+        <option value="$PROJECT_DIR$/learning/neuralnet/FeatureColumnsAutoEncoderNZ.py" />
+        <option value="$PROJECT_DIR$/mainAutoEncoderTraining.py" />
+        <option value="$PROJECT_DIR$/batch_job_autoencoder.sh" />
+        <option value="$PROJECT_DIR$/helpers/icd10_chapters.py" />
+        <option value="$PROJECT_DIR$/mainAnalyzeAutoEncoderCBOW.py" />
+        <option value="$PROJECT_DIR$/mainResultsAnalysis.py" />
+      </list>
+    </option>
+  </component>
+  <component name="ProjectFrameBounds" extendedState="6">
+    <option name="width" value="2560" />
+    <option name="height" value="1440" />
+  </component>
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectView">
+    <navigator proportions="" version="1">
+      <foldersAlwaysOnTop value="true" />
+    </navigator>
+    <panes>
+      <pane id="Scope" />
+      <pane id="ProjectPane">
+        <subPane>
+          <expand>
+            <path>
+              <item name="PATREC" type="b2602c69:ProjectViewProjectNode" />
+              <item name="PATREC" type="462c0819:PsiDirectoryNode" />
+            </path>
+          </expand>
+          <select />
+        </subPane>
+      </pane>
+    </panes>
+  </component>
+  <component name="PropertiesComponent">
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="run.code.analysis.last.selected.profile" value="pProject Default" />
+    <property name="settings.editor.selected.configurable" value="vcs.Git" />
+  </component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/utils" />
+      <recent name="$PROJECT_DIR$/preprocessing" />
+    </key>
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$" />
+    </key>
+  </component>
+  <component name="RunDashboard">
+    <option name="ruleStates">
+      <list>
+        <RuleState>
+          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
+        </RuleState>
+        <RuleState>
+          <option name="name" value="StatusDashboardGroupingRule" />
+        </RuleState>
+      </list>
+    </option>
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="45c6e9df-ab43-4470-b81c-0bb7908b750f" name="Default" comment="" />
+      <created>1536929427714</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1536929427714</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="TodoView">
+    <todo-panel id="selected-file">
+      <is-autoscroll-to-source value="true" />
+    </todo-panel>
+    <todo-panel id="all">
+      <are-packages-shown value="true" />
+      <is-autoscroll-to-source value="true" />
+    </todo-panel>
+  </component>
+  <component name="ToolWindowManager">
+    <frame x="0" y="23" width="2560" height="1417" extended-state="6" />
+    <editor active="true" />
+    <layout>
+      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.49759036" visible="true" weight="0.17911041" />
+      <window_info id="Structure" order="1" sideWeight="0.50240964" side_tool="true" weight="0.14949928" />
+      <window_info id="Favorites" order="2" side_tool="true" />
+      <window_info anchor="bottom" id="Message" order="0" />
+      <window_info anchor="bottom" id="Find" order="1" visible="true" weight="0.32853025" />
+      <window_info anchor="bottom" id="Run" order="2" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
+      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
+      <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
+      <window_info anchor="bottom" id="TODO" order="6" weight="0.32891566" />
+      <window_info anchor="bottom" id="Inspection Results" order="7" weight="0.3299712" />
+      <window_info anchor="bottom" id="Terminal" order="8" />
+      <window_info anchor="bottom" id="Event Log" order="9" side_tool="true" weight="0.32891566" />
+      <window_info anchor="bottom" id="Version Control" order="10" />
+      <window_info anchor="bottom" id="Python Console" order="11" />
+      <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
+      <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
+      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
+      <window_info anchor="right" id="R Graphics" order="3" />
+      <window_info anchor="right" id="R Packages" order="4" />
+    </layout>
+    <layout-to-restore>
+      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.49759036" visible="true" weight="0.17453505" />
+      <window_info id="Structure" order="1" sideWeight="0.50240964" side_tool="true" weight="0.14949928" />
+      <window_info id="Favorites" order="2" side_tool="true" />
+      <window_info anchor="bottom" id="Message" order="0" />
+      <window_info anchor="bottom" id="Find" order="1" visible="true" weight="0.32853025" />
+      <window_info anchor="bottom" id="Run" order="2" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
+      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
+      <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
+      <window_info anchor="bottom" id="TODO" order="6" weight="0.32891566" />
+      <window_info anchor="bottom" id="Inspection Results" order="7" weight="0.3299712" />
+      <window_info anchor="bottom" id="Terminal" order="8" />
+      <window_info anchor="bottom" id="Event Log" order="9" side_tool="true" weight="0.32891566" />
+      <window_info anchor="bottom" id="Version Control" order="10" />
+      <window_info anchor="bottom" id="Python Console" order="11" />
+      <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
+      <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
+      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
+      <window_info anchor="right" id="R Graphics" order="3" />
+      <window_info anchor="right" id="R Packages" order="4" />
+    </layout-to-restore>
+  </component>
+  <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/mainPreprocessing.py" />
+    <entry file="file://$PROJECT_DIR$/analyzing/DataAnalyzer.py" />
+    <entry file="file://$PROJECT_DIR$/learning/neuralnet/AutoEncoderDatasetMaker.py" />
+    <entry file="file://$PROJECT_DIR$/preprocessing/ColumnSplitter.py" />
+    <entry file="file://$PROJECT_DIR$/learning/neuralnet/FeatureColumnsNZ.py" />
+    <entry file="file://$PROJECT_DIR$/preprocessing/FeatureReducer.py" />
+    <entry file="file://$PROJECT_DIR$/learning/neuralnet/NeuralNetModel.py" />
+    <entry file="file://$PROJECT_DIR$/learning/neuralnet/NeuralNetEstimator.py" />
+    <entry file="file://$PROJECT_DIR$/learning/BaseClassifier.py" />
+    <entry file="file://$PROJECT_DIR$/learning/ClassifierSGD.py" />
+    <entry file="file://$PROJECT_DIR$/mainTrainIterativeClassifier.py" />
+    <entry file="file://$PROJECT_DIR$/analyzing/ResultsAnalyzer.py" />
+    <entry file="file://$PROJECT_DIR$/helpers/helpers.py" />
+    <entry file="file://$PROJECT_DIR$/mainTestClassifier.py" />
+    <entry file="file://$PROJECT_DIR$/utils/Dataset.py" />
+    <entry file="file://$PROJECT_DIR$/mainNeuralNetworkTraining.py" />
+    <entry file="file://$PROJECT_DIR$/mainNeuralNetworkTrainingNZ.py" />
+    <entry file="file://$PROJECT_DIR$/mainAnalyzeEmbeddingWeights.py" />
+    <entry file="file://$PROJECT_DIR$/mainLearnedFeaturesAnalyzer.py" />
+    <entry file="file://$PROJECT_DIR$/mainDataAnalysis.py" />
+    <entry file="file://$PROJECT_DIR$/mainNeuralNetworkTesting.py" />
+    <entry file="file://$PROJECT_DIR$/mainCheckWiederkehrer.py" />
+    <entry file="file://$PROJECT_DIR$/helpers/icd_conversion_helper.py" />
+    <entry file="file://$PROJECT_DIR$/mainCreateFusedDatasetNZ.py" />
+    <entry file="file://$PROJECT_DIR$/helpers/constants.py" />
+    <entry file="file://$PROJECT_DIR$/utils/BaseDatasetOptions.py" />
+    <entry file="file://$PROJECT_DIR$/utils/DatasetOptions.py" />
+    <entry file="file://$PROJECT_DIR$/batch_job_nzdata.sh" />
+    <entry file="file://$PROJECT_DIR$/preprocessing/FeatureEncoder.py" />
+    <entry file="file://$PROJECT_DIR$/preprocessing/DataPreparer.py" />
+    <entry file="file://$PROJECT_DIR$/helpers/icd9_to_icd10.csv" />
+    <entry file="file://$PROJECT_DIR$/helpers/constantsNZ.py" />
+    <entry file="file://$PROJECT_DIR$/preprocessing/PreprocessorNZ.py" />
+    <entry file="file://$PROJECT_DIR$/learning/neuralnet/NeuralNetDatasetMaker.py" />
+    <entry file="file://$PROJECT_DIR$/learning/neuralnet/NeuralNetDatasetHandler.py" />
+    <entry file="file://$PROJECT_DIR$/mainPreprocessingNZ.py" />
+    <entry file="file://$PROJECT_DIR$/mainAutoEncoderDataEncoding.py" />
+    <entry file="file://$PROJECT_DIR$/learning/ClassifierRF.py" />
+    <entry file="file://$PROJECT_DIR$/learning/ClassifierSVM.py" />
+    <entry file="file://$PROJECT_DIR$/learning/neuralnet/FeatureColumnsPatrecFusion.py" />
+    <entry file="file://$PROJECT_DIR$/learning/neuralnet/FeatureColumnsNZFusion.py" />
+    <entry file="file://$PROJECT_DIR$/learning/neuralnet/FeatureColumnsAutoEncoderNZ.py" />
+    <entry file="file://$PROJECT_DIR$/mainAutoEncoderTraining.py" />
+    <entry file="file://$PROJECT_DIR$/batch_job_autoencoder.sh" />
+    <entry file="file://$PROJECT_DIR$/helpers/icd10_chapters.py" />
+    <entry file="file://$PROJECT_DIR$/mainAnalyzeAutoEncoderCBOW.py" />
+    <entry file="file://$PROJECT_DIR$/learning/neuralnet/AutoEncoderModel.py" />
+    <entry file="file://$PROJECT_DIR$/learning/neuralnet/AutoEncoderEstimator.py" />
+    <entry file="file://$PROJECT_DIR$/mainAutoEncoderAnalysis.py" />
+    <entry file="file://$PROJECT_DIR$/mainResultsAnalysis.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="781">
+          <caret line="230" column="45" lean-forward="true" selection-start-line="230" selection-start-column="45" selection-end-line="230" selection-end-column="45" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/mainTrainClassifier.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+  </component>
+</project>

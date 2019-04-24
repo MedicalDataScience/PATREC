@@ -49,6 +49,9 @@ class LearnedFeaturesAnalyzer:
     def _getAvgFeatureWeights(self):
         [feature_weights_all_runs, feature_names] = self._readFeatureWeights();
         avg_weights = np.mean(feature_weights_all_runs, axis=0);
+        print('sum: ' + str(np.sum(np.abs(avg_weights))))
+        print('avg: ' + str(avg_weights))
+        avg_weights = avg_weights / np.sum(np.abs(avg_weights));
         return [avg_weights, feature_names];
 
 
@@ -57,7 +60,9 @@ class LearnedFeaturesAnalyzer:
         return [avg_weights, names];
 
     def _getSortedAvgFeatureWeights(self, num_features):
+        print('get avg feature weights...')
         [avg_weights, names] = self._getAvgFeatureWeights()
+        print('DONE')
         name_value_pairs = [];
         for k in range(0, len(names)):
             name_value_pairs.append([abs(avg_weights[k]), names[k]]);
@@ -70,25 +75,65 @@ class LearnedFeaturesAnalyzer:
             names.append(sorted_name_value_pairs[k][1]);
         return [weights, names];
 
+
+    def _switchToEnglishNames(self, names):
+        english_names = []
+        for name in names:
+            if name.startswith('Liegestatus'):
+                new_name = 'LOS_';
+                cat_value = name.split('_')[-1]
+                if cat_value == 'norm':
+                    new_cat_value = 'inlier'
+                elif cat_value == 'opti':
+                    new_cat_value = 'optimal'
+                elif cat_value == 'kurz':
+                    new_cat_value = 'low'
+                elif cat_value == 'high':
+                    new_cat_value = 'high'
+                elif cat_value == 'unb':
+                    new_cat_value = 'unknown'
+                else:
+                    new_cat_value = cat_value
+                new_name = new_name + new_cat_value
+            elif name.startswith('Eintrittsalter'):
+                new_name = 'Age'
+            else:
+                new_name = name
+            english_names.append(new_name)
+        return english_names
+
+
     def _createBarPlotForAxesObj(self, ax_obj, index_vec, values_vec, labels_vec, titleStr):
-        ax_obj.bar(index_vec, values_vec, 0.75, align='center', color='b', alpha=0.5);
-        ax_obj.xaxis.set_ticks(index_vec);
-        ax_obj.set_xticklabels(labels_vec, rotation=90)
-        ax_obj.xaxis.set_tick_params(labelsize=8)
-        ax_obj.set_xlim([-1, len(index_vec)])
+        values_vec = values_vec[::-1]
+        labels_vec = labels_vec[::-1]
+        ax_obj.barh(index_vec, values_vec, 0.75, align='center', color='b', alpha=0.5)
+        # ax_obj.bar(index_vec, values_vec, 0.75, align='center', color='b', alpha=0.5);
+        # ax_obj.xaxis.set_ticks(index_vec);
+        # ax_obj.set_xticklabels(labels_vec, rotation=90)
+        # ax_obj.xaxis.set_tick_params(labelsize=12)
+        # ax_obj.set_xlim([-1, len(index_vec)])
+        ax_obj.yaxis.set_ticks(index_vec);
+        ax_obj.set_yticklabels(labels_vec)
+        ax_obj.yaxis.set_tick_params(labelsize=12)
+        ax_obj.set_ylim([-1, len(index_vec)])
         ax_obj.set_title(titleStr)
+        ax_obj.set_xlabel('Feature Weight')
         return ax_obj;
 
 
-    def plotAvgLearnedFeatures(self, num_features=50):
-        filename = self.dir_plots + 'learnedfeatures_avg_' + self.options_classifier.getFilenameOptions() + '_' + self.options_classifier.filename_options_training_data + '.png';
+    def plotAvgLearnedFeatures(self, num_features=50, english=False):
+        filename = self.dir_plots + 'learnedfeatures_avg_' + self.options_classifier.getFilenameOptions() +\
+                   '_' + self.options_classifier.filename_options_training_data + \
+                   '_' + str(num_features) + 'features.png';
         print(filename)
         [avg_weights, names] = self._getSortedAvgFeatureWeights(num_features);
         print('start plotting...')
         index_vec = range(0, num_features);
-        fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(15, 7));
+        fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(6, 6));
         fig.tight_layout()
-        fig.subplots_adjust(bottom=0.3, wspace=0.01, hspace=0.01)
+        fig.subplots_adjust(bottom=0.1, left=0.4, hspace=0.01)
+        if english:
+            names = self._switchToEnglishNames(names)
         ax = self._createBarPlotForAxesObj(ax, index_vec, avg_weights, names, '');
         plt.draw()
         plt.savefig(filename, format='png');

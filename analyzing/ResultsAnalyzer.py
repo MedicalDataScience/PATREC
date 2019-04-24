@@ -199,7 +199,7 @@ class ResultsAnalyzer:
         plt.ylabel('tpr');
         plt.xlim([0, 1]);
         plt.ylim([0, 1]);
-        plt.legend(loc='lower right', prop={'size': 14});
+        plt.legend(loc='lower right', prop={'size': 20});
         plt.grid(True)
         if title_plot is not None:
             plt.suptitle(title_plot)

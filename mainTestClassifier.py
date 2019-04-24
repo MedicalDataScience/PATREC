@@ -22,21 +22,21 @@ if __name__ == '__main__':
         'dir_data':                 dirData,
         'data_prefix':              'patrec',
         'dataset':                  '20122015',
-        'subgroups':                ['DK'],
         'encoding':                 'categorical',
-        'newfeatures':              None,
-        'featurereduction':         {'method': 'FUSION'},
-        'grouping':                 'verylightgrouping'
+        'newfeatures':              {'names': constantsPATREC.NEW_FEATURES},
+        'featurereduction':         None,
+        'grouping':                 'verylightgrouping',
+        'filtering':                'oncology'
     }
     dict_options_dataset_testing = {
         'dir_data':                 dirData,
         'data_prefix':              'patrec',
         'dataset':                  '20162017',
-        'subgroups':                ['DK'],
         'encoding':                 'categorical',
-        'newfeatures':              None,
-        'featurereduction':         {'method': 'FUSION'},
-        'grouping':                 'verylightgrouping'
+        'newfeatures':              {'names': constantsPATREC.NEW_FEATURES},
+        'featurereduction':         None,
+        'grouping':                 'verylightgrouping',
+        'filtering':                'oncology'
     }
 
     options_training = DatasetOptions(dict_options_dataset_training);
@@ -46,12 +46,12 @@ if __name__ == '__main__':
     options_rf = OptionsRF(dirModelsBase, options_training.getFilenameOptions(filteroptions=True), options_clf=dict_opt_rf);
     clf_rf = ClassifierRF(options_rf);
 
-    dict_opt_lr = {'penalty': 'l1', 'C': 0.075};
+    dict_opt_lr = {'penalty': 'l1', 'C': 0.1};
     options_lr = OptionsLogisticRegression(dirModelsBase, options_training.getFilenameOptions(filteroptions=True), options_clf=dict_opt_lr);
     clf_lr = ClassifierLogisticRegression(options_lr);
 
-    options_clf = options_lr
-    clf = clf_lr;
+    options_clf = options_rf
+    clf = clf_rf;
 
     options_testing = DatasetOptions(dict_options_dataset_testing);
     dataset_testing = Dataset(dataset_options=options_testing);

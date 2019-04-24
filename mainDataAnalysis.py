@@ -21,7 +21,7 @@ dict_options_analyzing = {
     'newfeatures':          {'names': constants.NEW_FEATURES},
     'featurereduction':     None,
     'grouping':             'verylightgrouping',
-    'filtering':            'cardiovascular'
+    'filtering':            None
 }
 
 options = DatasetOptions(dict_options_analyzing);

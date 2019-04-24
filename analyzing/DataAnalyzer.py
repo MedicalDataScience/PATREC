@@ -1,8 +1,10 @@
 import sys
-import matplotlib.pyplot as plt
 import numpy as np
 from datetime import datetime
 import pandas as pd
+
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 from utils.Dataset import Dataset
 
@@ -13,6 +15,37 @@ class DataAnalyzer:
         self.dataset = Dataset(dataset_options=dataset_options);
         self.dir_plots = dir_plots;
         return;
+
+    def _switchToEnglishCategoryNames(self, names):
+        english_names = []
+        for name in names:
+            cat_value = name.split('_')[-1]
+            if cat_value == 'norm':
+                new_cat_value = 'inlier'
+            elif cat_value == 'opti':
+                new_cat_value = 'optimal'
+            elif cat_value == 'kurz':
+                new_cat_value = 'low'
+            elif cat_value == 'lang':
+                new_cat_value = 'high'
+            elif cat_value == 'unb':
+                new_cat_value = 'unknown'
+            elif cat_value == 'vap':
+                new_cat_value = 'other'
+            else:
+                new_cat_value = cat_value
+            new_name = new_cat_value
+            english_names.append(new_name)
+        return english_names
+
+    def _switchToEnglishFeatureName(self, name):
+        if name == 'Liegestatus':
+            new_name = 'LOS';
+        elif name == 'Eintrittsalter':
+            new_name = 'Age'
+        else:
+            new_name = name
+        return new_name
 
 
     def _printValues(self, category_names, occ_wiederkehrer, occ_normal):
@@ -46,50 +79,53 @@ class DataAnalyzer:
 
 
     # for categorical features
-    def _doComparisonBar(self, df, name_feature):
+    def _doComparisonBar(self, df, name_feature, english_names=False):
         filename_plot = self.dir_plots + 'featurecomparison_' + name_feature + '.png';
         print(name_feature)
         categories_feature = self.dataset_options.getFeatureCategories(name_feature);
         if name_feature == self.dataset_options.getNameMainDiag():
             if self.dataset_options.getOptionsFiltering() in self.dataset_options.getDiseaseNames():
                 categories_feature = self.dataset_options.getDiseaseICDkeys();
-        print(categories_feature)
-        values_to_count = range(0, len(categories_feature));
+        values_to_count = np.arange(len(categories_feature));
 
         [df_feature_normal, df_feature_wiederkehrer] = self._getFeatureValues(df, name_feature);
         if df_feature_wiederkehrer.shape[1] > 0 and df_feature_normal.shape[1] > 0:
             if name_feature == self.dataset_options.getNameMainDiag():
                 if self.dataset_options.getOptionsFiltering() in self.dataset_options.getDiseaseNames():
                     [df_feature_normal, df_feature_wiederkehrer] = self._filterDFdisease(name_feature, categories_feature, df_feature_normal, df_feature_wiederkehrer);
+            if english_names:
+                categories_feature = self._switchToEnglishCategoryNames(categories_feature)
+                name_feature = self._switchToEnglishFeatureName(name_feature)
+
             num_feature_normal = df_feature_normal.shape[0];
             num_feature_wiederkehrer = df_feature_wiederkehrer.shape[0];
             occ_feature_wiederkehrer = df_feature_wiederkehrer.sum(axis=0);
             occ_feature_normal = df_feature_normal.sum(axis=0);
 
-            self._printValues(categories_feature, occ_feature_wiederkehrer, occ_feature_normal);
+            # self._printValues(categories_feature, occ_feature_wiederkehrer, occ_feature_normal);
 
             occ_wiederkehrer = occ_feature_wiederkehrer.values;
             occ_normal = occ_feature_normal.values;
             density_normal = occ_normal / float(num_feature_normal);
             density_wiederkehrer = occ_wiederkehrer / float(num_feature_wiederkehrer);
 
-            print(len(values_to_count))
-            print(density_wiederkehrer.shape)
-
+            width=0.4;
             fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(14, 10));
-            plt.bar(values_to_count, height=density_wiederkehrer.flatten(), width=1.0, align='center', color='b', alpha=0.5)
-            plt.bar(values_to_count, height=density_normal.flatten(), width=1.0, align='center', color='m', alpha=0.5)
-            plt.xlim([-1, len(categories_feature) + 1])
-            plt.xticks(range(0, len(values_to_count)), categories_feature)
-            plt.legend(['Wiederkehrer', 'normal'])
-            plt.title(name_feature);
+            plt.bar(values_to_count, height=density_wiederkehrer.flatten(), width=width, color='b', alpha=0.5, label = 'early readmission')
+            plt.bar(values_to_count - width, height=density_normal.flatten(), width=width, color='m', alpha=0.5, label = 'normal')
+            plt.xlim([-1, len(categories_feature)])
+            plt.xticks(values_to_count - width/2, categories_feature, fontsize=14)
+            plt.ylabel('Percentage of Patient Group', fontsize=16)
+            plt.xlabel(name_feature, fontsize=16)
+            plt.legend(prop={'size': 16})
+            # plt.title(name_feature);
             plt.draw()
             plt.savefig(filename_plot, format='png')
             plt.close();
 
 
     # for numerical features
-    def _doComparisonHist(self, df, name_feature):
+    def _doComparisonHist(self, df, name_feature, english_name=False):
         filename_plot = self.dir_plots + 'featurecomparison_' + name_feature + '.png';
         print(name_feature)
 
@@ -99,6 +135,8 @@ class DataAnalyzer:
             num_values_wiederkehrer = df_feature_wiederkehrer.shape[0];
             values_wiederkehrer = df_feature_wiederkehrer.values;
             values_normal = df_feature_normal.values;
+            if english_name:
+                name_feature = self._switchToEnglishFeatureName(name_feature)
 
             print('normal: ' + str(df_feature_normal.shape))
             print('normal: ' + str(df_feature_wiederkehrer.shape))
@@ -133,12 +171,22 @@ class DataAnalyzer:
 
             bar_width_wiederkehrer = bins_wiederkehrer[1:] - bins_wiederkehrer[:-1];
             bar_width_normal = bins_normal[1:] - bins_normal[:-1];
+            bar_width_wiederkehrer = bar_width_wiederkehrer[0]/2.0;
+            bar_width_normal = bar_width_normal[0]/2.0;
+            bar_width_wiederkehrer = bar_width_wiederkehrer - bar_width_wiederkehrer/10.0;
+            bar_width_normal = bar_width_normal - bar_width_normal/10.0;
 
             fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(14, 10));
-            plt.bar(bins_wiederkehrer[:-1], height=hist_feature_wiederkehrer, width=bar_width_wiederkehrer, align='edge', color='b', alpha=0.5)
-            plt.bar(bins_normal[:-1], height=hist_feature_normal, width=bar_width_normal, align='edge', color='m', alpha=0.5)
-            plt.legend(['Wiederkehrer', 'normal'])
-            plt.title(name_feature);
+
+            plt.bar(bins_wiederkehrer[:-1], height=hist_feature_wiederkehrer, width=bar_width_wiederkehrer, color='b', alpha=0.5, label = 'early readmission')
+            plt.bar(bins_normal[:-1]-bar_width_normal, height=hist_feature_normal, width=bar_width_normal, color='m', alpha=0.5, label = 'normal')
+            plt.plot(bins_wiederkehrer[:-1], hist_feature_wiederkehrer, linewidth=3, color='b')
+            plt.plot(bins_normal[:-1], hist_feature_normal, linewidth=3, color='m')
+            plt.xticks(fontsize=14)
+            plt.xlabel(name_feature, fontsize=16)
+            plt.ylabel('Percentage of Patient Group', fontsize=16)
+            plt.legend(prop={'size': 16})
+            # plt.title(name_feature);
             plt.draw()
             plt.savefig(filename_plot, format='png')
             plt.close();
@@ -149,7 +197,7 @@ class DataAnalyzer:
     # but like this it is not ideal either
     def doFeatureComparison(self):
         df = self.dataset.getDf();
-
+        print('df.shape: ' + str(df.shape))
         df_wiederkehrer = df['Wiederkehrer']
         print('num_wiederkehrer: ' + str(df_wiederkehrer.sum(axis=0)));
 
@@ -160,13 +208,11 @@ class DataAnalyzer:
         self._doComparisonHist(df, 'ratio_los_numOE');
         self._doComparisonHist(df, 'mult_los_numCHOP');
         self._doComparisonHist(df, 'ratio_numCHOP_age');
-        self._doComparisonHist(df, 'Eintrittsalter');
+        self._doComparisonHist(df, 'Eintrittsalter', english_name=True);
         self._doComparisonHist(df, 'Verweildauer');
         self._doComparisonHist(df, 'numDK');
         self._doComparisonHist(df, 'numOE');
         self._doComparisonHist(df, 'numCHOP');
-        self._doComparisonHist(df, 'Langlieger');
-        self._doComparisonHist(df, 'equalOE');
         self._doComparisonHist(df, 'previous_visits');
         self._doComparisonHist(df, 'diff_drg_alos');
         self._doComparisonHist(df, 'diff_drg_lowerbound');
@@ -187,8 +233,10 @@ class DataAnalyzer:
         self._doComparisonBar(df, 'Aufnahmeart');
         self._doComparisonBar(df, 'Entlassart');
         self._doComparisonBar(df, 'Eintrittsart');
-        self._doComparisonBar(df, 'Liegestatus');
+        self._doComparisonBar(df, 'Liegestatus', english_names=True);
         self._doComparisonBar(df, 'Hauptdiagnose');
+        # self._doComparisonBar(df, 'Langlieger');
+        # self._doComparisonBar(df, 'equalOE');
         # self._doComparisonBar(df, 'CHOP');
 
 

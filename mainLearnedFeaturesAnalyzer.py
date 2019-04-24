@@ -32,31 +32,31 @@ if __name__ == '__main__':
     dirPlotsBase = dirProject + 'plots/learned_features/';
 
     dict_options_dataset_training = {
-        'dir_data':             dirData,
-        'data_prefix':          'patrec',
-        'dataset':              '20122015',
-        'subgroups':            ['DK'],
-        'encoding':             'categorical',
-        'newfeatures':          None,
-        'featurereduction':     {'method': 'FUSION'},
-        'grouping':             'verylightgrouping'
+        'dir_data':                 dirData,
+        'data_prefix':              'patrec',
+        'dataset':                  '20122015',
+        'grouping':                 'verylightgrouping',
+        'encoding':                 'categorical',
+        'newfeatures':              {'names': constantsPATREC.NEW_FEATURES},
+        'featurereduction':         None,
+        'filtering':                None
     }
     options_training = DatasetOptions(dict_options_dataset_training);
 
-    dict_opt_rf = {'n_estimators': 100, 'max_depth': 15};
+    dict_opt_rf = {'n_estimators': 100, 'max_depth': 5};
     options_rf = OptionsRF(dirModelsBase, options_training.getFilenameOptions(filteroptions=True), options_clf=dict_opt_rf);
 
-    dict_opt_lr = {'penalty': 'l2', 'C': 0.01};
+    dict_opt_lr = {'penalty': 'l1', 'C': 0.1};
     options_lr = OptionsLogisticRegression(dirModelsBase, options_training.getFilenameOptions(filteroptions=True), options_clf=dict_opt_lr);
 
-    options = options_rf;
+    options = options_lr;
 
     analyzer = LearnedFeaturesAnalyzer(dir_plots_base=dirPlotsBase,
                                        options_training_data=options_training,
                                        options_classifier=options,
                                        num_runs=10);
 
-    num_important_features = 25;
+    num_important_features = 10;
     analyzer.plotAvgLearnedFeatures(num_features=num_important_features);
 
 
