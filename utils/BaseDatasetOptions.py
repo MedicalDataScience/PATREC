@@ -27,28 +27,27 @@ class BaseDatasetOptions:
 
 
     def _getFilenameOptions(self, filteroptions):
-        str = self.data_prefix + '_' + self.dataset;
-        str = str + '_' + self.getFeatureSetStr()
+        str_opt = self.data_prefix + '_' + self.dataset;
+        str_opt = str_opt + '_' + self.getFeatureSetStr()
 
-        str = str + '_' + self.encoding;
+        str_opt = str_opt + '_' + self.encoding;
         if self.options_encoding is not None:
-            str = str + self.options_encoding;
+            str_opt = str_opt + self.options_encoding;
 
         if self.grouping is not None:
-            str = str + '_' + self.grouping;
+            str_opt = str_opt + '_' + self.grouping;
             if self.options_grouping is not None:
-                str = str + self.options_grouping;
+                str_opt = str_opt + self.options_grouping;
 
         if filteroptions:
             if self.options_filtering is not None:
-                str = str + '_' + self.options_filtering;
-        self.filename_options = str;
+                str_opt = str_opt + '_' + self.options_filtering;
+        self.filename_options = str_opt;
 
 
-    def _getFilename(self):
+    def _getFilename(self, filteroptions=False):
         str = self.dir_data + '/' + 'data_';
-        if self.filename_options is None:
-            self._getFilenameOptions(filteroptions=False);
+        self._getFilenameOptions(filteroptions=filteroptions);
         str = str + self.filename_options;
         str = str + '.csv';
         return str;
@@ -93,9 +92,8 @@ class BaseDatasetOptions:
         return self.filename_options;
 
 
-    def getFilename(self):
-        if self.filename is None:
-            self.filename = self._getFilename();
+    def getFilename(self, filteroptions=False):
+        self.filename = self._getFilename(filteroptions);
         return self.filename;
 
 

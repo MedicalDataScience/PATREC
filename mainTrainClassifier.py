@@ -27,7 +27,11 @@ if __name__ == '__main__':
     'encoding':                 'categorical',
     'newfeatures':              {'names': constantsPATREC.NEW_FEATURES},
     'featurereduction':         None,
+<<<<<<< Updated upstream
     'filtering':                'oncology'
+=======
+    'filtering':                'chronic_lung'
+>>>>>>> Stashed changes
 }
 
     options_training = DatasetOptions(dict_options_dataset_training);
@@ -36,11 +40,19 @@ if __name__ == '__main__':
 
     print('dataset filename: ' + str(dataset_training.getFilename()))
 
+<<<<<<< Updated upstream
     dict_opt_rf = {'n_estimators': 100, 'max_depth': 5};
     options_rf = OptionsRF(dirModelsBase, options_training.getFilenameOptions(filteroptions=True), options_clf=dict_opt_rf);
     clf_rf = ClassifierRF(options_rf);
 
     dict_opt_lr = {'penalty': 'l2', 'C': 0.0001};
+=======
+    dict_opt_rf = {'n_estimators': 500, 'max_depth': 50};
+    options_rf = OptionsRF(dirModelsBase, options_training.getFilenameOptions(filteroptions=True), options_clf=dict_opt_rf);
+    clf_rf = ClassifierRF(options_rf);
+
+    dict_opt_lr = {'penalty': 'l1', 'C': 0.5};
+>>>>>>> Stashed changes
     options_lr = OptionsLogisticRegression(dirModelsBase, options_training.getFilenameOptions(filteroptions=True), options_clf=dict_opt_lr);
     clf_lr = ClassifierLogisticRegression(options_lr);
 

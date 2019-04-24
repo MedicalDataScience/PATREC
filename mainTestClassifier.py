@@ -24,9 +24,16 @@ if __name__ == '__main__':
         'dataset':                  '20122015',
         'subgroups':                ['DK'],
         'encoding':                 'categorical',
+<<<<<<< Updated upstream
         'newfeatures':              None,
         'featurereduction':         {'method': 'FUSION'},
         'grouping':                 'verylightgrouping'
+=======
+        'newfeatures':              {'names': constantsPATREC.NEW_FEATURES},
+        'featurereduction':         None,
+        'grouping':                 'verylightgrouping',
+        'filtering':                'chronic_lung'
+>>>>>>> Stashed changes
     }
     dict_options_dataset_testing = {
         'dir_data':                 dirData,
@@ -34,19 +41,30 @@ if __name__ == '__main__':
         'dataset':                  '20162017',
         'subgroups':                ['DK'],
         'encoding':                 'categorical',
+<<<<<<< Updated upstream
         'newfeatures':              None,
         'featurereduction':         {'method': 'FUSION'},
         'grouping':                 'verylightgrouping'
+=======
+        'newfeatures':              {'names': constantsPATREC.NEW_FEATURES},
+        'featurereduction':         None,
+        'grouping':                 'verylightgrouping',
+        'filtering':                'chronic_lung'
+>>>>>>> Stashed changes
     }
 
     options_training = DatasetOptions(dict_options_dataset_training);
     dataset_training = Dataset(dataset_options=options_training);
 
-    dict_opt_rf = {'n_estimators': 100, 'max_depth': 15};
+    dict_opt_rf = {'n_estimators': 500, 'max_depth': 50};
     options_rf = OptionsRF(dirModelsBase, options_training.getFilenameOptions(filteroptions=True), options_clf=dict_opt_rf);
     clf_rf = ClassifierRF(options_rf);
 
+<<<<<<< Updated upstream
     dict_opt_lr = {'penalty': 'l1', 'C': 0.075};
+=======
+    dict_opt_lr = {'penalty': 'l1', 'C': 0.5};
+>>>>>>> Stashed changes
     options_lr = OptionsLogisticRegression(dirModelsBase, options_training.getFilenameOptions(filteroptions=True), options_clf=dict_opt_lr);
     clf_lr = ClassifierLogisticRegression(options_lr);
 

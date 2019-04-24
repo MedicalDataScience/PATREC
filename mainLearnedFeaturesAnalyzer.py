@@ -43,10 +43,17 @@ if __name__ == '__main__':
     }
     options_training = DatasetOptions(dict_options_dataset_training);
 
+<<<<<<< Updated upstream
     dict_opt_rf = {'n_estimators': 100, 'max_depth': 15};
     options_rf = OptionsRF(dirModelsBase, options_training.getFilenameOptions(filteroptions=True), options_clf=dict_opt_rf);
 
     dict_opt_lr = {'penalty': 'l2', 'C': 0.01};
+=======
+    dict_opt_rf = {'n_estimators': 500, 'max_depth': 50};
+    options_rf = OptionsRF(dirModelsBase, options_training.getFilenameOptions(filteroptions=True), options_clf=dict_opt_rf);
+
+    dict_opt_lr = {'penalty': 'l1', 'C': 0.5};
+>>>>>>> Stashed changes
     options_lr = OptionsLogisticRegression(dirModelsBase, options_training.getFilenameOptions(filteroptions=True), options_clf=dict_opt_lr);
 
     options = options_rf;
@@ -56,8 +63,13 @@ if __name__ == '__main__':
                                        options_classifier=options,
                                        num_runs=10);
 
+<<<<<<< Updated upstream
     num_important_features = 25;
     analyzer.plotAvgLearnedFeatures(num_features=num_important_features);
+=======
+    num_important_features = 10;
+    analyzer.plotAvgLearnedFeatures(num_features=num_important_features, english=True);
+>>>>>>> Stashed changes
 
 
 
