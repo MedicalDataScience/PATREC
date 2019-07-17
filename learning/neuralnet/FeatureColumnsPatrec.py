@@ -79,8 +79,10 @@ class FeatureColumnsPatrec:
         procedures = tf.feature_column.categorical_column_with_vocabulary_list(
             'CHOP', helpers.getCHOPgrouping()
         )
+        categories_nebendiagnose = self.dataset_options.getFeatureCategories('Hauptdiagnose');
+        embedding_dim_nebendiagnose = int(round(math.sqrt(math.sqrt(len(categories_nebendiagnose)))));
         nebendiagnose = tf.feature_column.categorical_column_with_vocabulary_list(
-            'DK', helpers.getDKgrouping()
+            'DK', categories_nebendiagnose
         )
         oe = tf.feature_column.categorical_column_with_vocabulary_list(
             'OE', helpers.getOEgrouping()
@@ -112,7 +114,7 @@ class FeatureColumnsPatrec:
         feature_columns.append(tf.feature_column.embedding_column(categorical_column=oe_entlass, dimension=2))
         feature_columns.append(tf.feature_column.embedding_column(categorical_column=mdc, dimension=2))
         feature_columns.append(tf.feature_column.embedding_column(categorical_column=procedures, dimension=9));
-        feature_columns.append(tf.feature_column.embedding_column(categorical_column=nebendiagnose, dimension=10));
+        feature_columns.append(tf.feature_column.embedding_column(categorical_column=nebendiagnose, dimension=embedding_dim_nebendiagnose));
         feature_columns.append(tf.feature_column.embedding_column(categorical_column=oe, dimension=2));
         feature_columns.append(langlieger);
         feature_columns.append(dksepsis);

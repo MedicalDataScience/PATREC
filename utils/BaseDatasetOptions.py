@@ -1,5 +1,6 @@
 
 import sys
+import os
 
 class BaseDatasetOptions:
 
@@ -46,7 +47,7 @@ class BaseDatasetOptions:
 
 
     def _getFilename(self, filteroptions=False):
-        str = self.dir_data + '/' + 'data_';
+        str = os.path.join(self.dir_data, 'data_');
         self._getFilenameOptions(filteroptions=filteroptions);
         str = str + self.filename_options;
         str = str + '.csv';
@@ -98,7 +99,7 @@ class BaseDatasetOptions:
 
 
     def getFilenameSubgroup(self, subgroup):
-        str = self.dir_data + '/' + 'data_';
+        str = os.path.join(self.dir_data, 'data_');
         str = str + self.data_prefix + '_' + self.dataset + '_' + subgroup + '_' + self.grouping + '.csv';
         return str;
 

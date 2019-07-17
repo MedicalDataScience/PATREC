@@ -128,7 +128,7 @@ class Results:
 
 
     def _getDirResults(self, dir_results):
-        str = dir_results + self.classifier_options.getName() + '/' + self.results_type + '/';
+        str = os.path.join(dir_results, self.classifier_options.getName(), + self.results_type);
         if not os.path.exists(str):
             os.makedirs(str);
         return str;
@@ -208,13 +208,13 @@ class Results:
 
 
     def writeResultsToFileDataset(self):
-        filename_precision = self.dir_results + self.filename_options + '_precision.txt';
-        filename_recall = self.dir_results + self.filename_options + '_recall.txt'
-        filename_fmeasure = self.dir_results + self.filename_options + '_fmeasure.txt'
-        filename_tpr = self.dir_results + self.filename_options + '_tpr.txt'
-        filename_fpr = self.dir_results + self.filename_options + '_fpr.txt';
-        filename_auc = self.dir_results + self.filename_options + '_auc.txt';
-        filename_avgprecision = self.dir_results + self.filename_options + '_avgprecision.txt';
+        filename_precision = os.path.join(self.dir_results, self.filename_options + '_precision.txt');
+        filename_recall = os.path.join(self.dir_results, self.filename_options + '_recall.txt');
+        filename_fmeasure = os.path.join(self.dir_results, self.filename_options + '_fmeasure.txt');
+        filename_tpr = os.path.join(self.dir_results, self.filename_options + '_tpr.txt');
+        filename_fpr = os.path.join(self.dir_results, self.filename_options + '_fpr.txt');
+        filename_auc = os.path.join(self.dir_results, self.filename_options + '_auc.txt');
+        filename_avgprecision = os.path.join(self.dir_results, self.filename_options + '_avgprecision.txt');
         
         precision = self._getPrecisionAllRuns();
         recall = self._getRecallAllRuns();

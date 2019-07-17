@@ -28,17 +28,10 @@ class Dataset:
 
 
     def _getDf(self):
-<<<<<<< Updated upstream
         if self.options.getOptionsFiltering() is not None:
             self._filterData();
         else:
             filename = self.options.getFilename()
-=======
-        filename = self.options.getFilename(filteroptions=True)
-        print(filename)
-        if os.path.exists(filename):
-            print('get DF...')
->>>>>>> Stashed changes
             df = pd.read_csv(filename);
             self.df = df;
     

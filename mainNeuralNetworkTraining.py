@@ -46,6 +46,7 @@ from learning.neuralnet.FeatureColumnsNZFusion import FeatureColumnsNZFusion
 from learning.neuralnet.FeatureColumnsPatrecFusion import FeatureColumnsPatrecFusion
 from utils.DatasetOptions import DatasetOptions
 
+import helpers.constants as constantsPATREC
 
 # hidden_units = [100, 100, 50, 50, 25, 25, 25, 25, 10, 10, 10];
 # hidden_units = [30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30];
@@ -65,9 +66,10 @@ def define_flags():
     flags_core.set_defaults(data_dir=DIRPROJECT + 'data/',
                             model_dir='/tmp/patients_model',
                             export_dir='/tmp/patients_model/export_model',
-                            train_epochs=250,
+                            hidden_units=[60, 40, 40, 20],
+                            train_epochs=1000,
                             epochs_between_evals=1,
-                            batch_size=160)
+                            batch_size=320)
 
 
 def run_deep(flags_obj):
@@ -75,25 +77,29 @@ def run_deep(flags_obj):
     Args:
     flags_obj: An object containing parsed flag values.
     """
-    dict_data_train = {
-        'dir_data':             DIRPROJECT + 'data/',
-        'data_prefix':          'patrec',
-        'dataset':              '20122015',
-        'encoding':             'embedding',
-        'newfeatures':          None,
-        'featurereduction':     {'method': 'FUSION'},
-        'grouping':             'verylightgrouping'
+
+    dirProject = '/home/thomas/fusessh/scicore/projects/patrec/projects/PATREC'
+    dirData = os.path.join(dirProject, 'data');
+    dict_options_dataset_training = {
+        'dir_data':         dirData,
+        'data_prefix':      'patrec',
+        'dataset':          '20122015',
+        'grouping':         'verylightgrouping',
+        'encoding':         'embedding',
+        'newfeatures':      None,
+        'featurereduction': None,
+        'filtering':        None
     }
-    dataset_options_train = DatasetOptions(dict_data_train);
+    dataset_options_train = DatasetOptions(dict_options_dataset_training);
 
     dataset_options_eval = None;
 
 
-    if dict_data_train['data_prefix'] == 'nz':
-        feature_columns_nz_fusion = FeatureColumnsNZFusion(dataset_options=dataset_options_train);
+    if dict_options_dataset_training['data_prefix'] == 'nz':
+        feature_columns_nz_fusion = FeatureColumnsNZ(dataset_options=dataset_options_train);
         feature_columns = feature_columns_nz_fusion;
-    elif dict_data_train['data_prefix'] == 'patrec':
-        feature_columns_patrec_fusion = FeatureColumnsPatrecFusion(dataset_options=dataset_options_train);
+    elif dict_options_dataset_training['data_prefix'] == 'patrec':
+        feature_columns_patrec_fusion = FeatureColumnsPatrec(dataset_options=dataset_options_train);
         feature_columns = feature_columns_patrec_fusion;
     else:
         print('unknown data prefix..exit')
@@ -106,6 +112,7 @@ def run_deep(flags_obj):
     }
 
     nn = NeuralNetModel('train', dict_dataset_options, feature_columns, flags_obj);
+    print(flags_obj.log_dir)
     nn.train();
 
 
@@ -115,6 +122,6 @@ def main(_):
 
 if __name__ == '__main__':
 
-    tf.logging.set_verbosity(tf.logging.INFO)
+    tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.INFO)
     define_flags()
     absl_app.run(main)

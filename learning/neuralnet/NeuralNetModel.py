@@ -23,18 +23,22 @@ class NeuralNetModel():
         self.dataset_options_eval = dict_dataset_options['eval'];
         self.dataset_options_test = dict_dataset_options['test'];
         self.mode = mode;
+        self.flags = flags;
+
+        if not os.path.exists(self.flags.model_dir):
+            os.makedirs(self.flags.model_dir)
 
         if self.mode == 'train':
             if not self.dataset_options_eval is None:
-                self.dataset_handler_train = NeuralNetDatasetHandler(self.dataset_options_train, feature_columns, 'train');
-                self.dataset_handler_eval = NeuralNetDatasetHandler(self.dataset_options_eval, feature_columns, 'eval');
+                self.dataset_handler_train = NeuralNetDatasetHandler(self.flags.model_dir, self.dataset_options_train, feature_columns, 'train');
+                self.dataset_handler_eval = NeuralNetDatasetHandler(self.flags.model_dir, self.dataset_options_eval, feature_columns, 'eval');
             else:
-                self.dataset_handler_train = NeuralNetDatasetHandler(self.dataset_options_train, feature_columns, 'train');
-                self.dataset_handler_eval = NeuralNetDatasetHandler(self.dataset_options_train, feature_columns, 'eval');
+                self.dataset_handler_train = NeuralNetDatasetHandler(self.flags.model_dir, self.dataset_options_train, feature_columns, 'train');
+                self.dataset_handler_eval = NeuralNetDatasetHandler(self.flags.model_dir, self.dataset_options_train, feature_columns, 'eval');
         elif self.mode == 'test':
             self.dataset_handler_test = NeuralNetDatasetHandler(self.dataset_options_test, feature_columns, 'test');
 
-        self.flags = flags;
+
         self.model = None;
         self.flags.hidden_units = [int(u) for u in self.flags.hidden_units];
         return;
@@ -108,15 +112,15 @@ class NeuralNetModel():
     def createDatasets(self):
         if self.mode == 'train':
             if not self.dataset_options_eval is None:
-                dataset_maker_train = NeuralNetDatasetMaker('train', self.dataset_options_train);
-                dataset_maker_eval = NeuralNetDatasetMaker('eval', self.dataset_options_eval);
+                dataset_maker_train = NeuralNetDatasetMaker('train', self.flags.model_dir, self.dataset_options_train);
+                dataset_maker_eval = NeuralNetDatasetMaker('eval', self.flags.model_dir, self.dataset_options_eval);
                 dataset_maker_train.createDatasets();
                 dataset_maker_eval.createDatasets();
             else:
-                dataset_maker = NeuralNetDatasetMaker('traineval', self.dataset_options_train);
+                dataset_maker = NeuralNetDatasetMaker('traineval', self.flags.model_dir, self.dataset_options_train, balanced_datasets=False);
                 dataset_maker.createDatasets();
         elif self.mode == 'test':
-            dataset_maker = NeuralNetDatasetMaker('test', self.dataset_options_test);
+            dataset_maker = NeuralNetDatasetMaker('test', self.flags.model_dir, self.dataset_options_test);
             dataset_maker.createDatasets();
 
 
@@ -146,6 +150,7 @@ class NeuralNetModel():
 
         # Train and evaluate the model every `flags.epochs_between_evals` epochs.
         for n in range(self.flags.train_epochs // self.flags.epochs_between_evals):
+            print('n: ' + str(n))
             estimator.train(input_fn=self._input_fn_train)
             results = estimator.evaluate(input_fn=self._input_fn_eval)
             # Display evaluation metrics

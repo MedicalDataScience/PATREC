@@ -32,7 +32,7 @@ class DataPreparer:
         print('df_base.shape: ' + str(df.shape))
         for sub in subgroups:
             strFilenameInSubGroup = dataset + '_' + sub + '_' + grouping;
-            filename_data_subgroup = dir_data + 'data_' + data_prefix + '_' + strFilenameInSubGroup + '.csv';
+            filename_data_subgroup = os.path.join(dir_data, 'data_' + data_prefix + '_' + strFilenameInSubGroup + '.csv');
             print(filename_data_subgroup)
             subgroup_df = pd.DataFrame([]);
             subgroup_data_reader = pd.read_csv(filename_data_subgroup, chunksize=chunksize);
@@ -65,7 +65,7 @@ class DataPreparer:
 
         for sub in subgroups:
             strFilenameInSubGroup = dataset + '_' + sub + '_' + grouping;
-            filename_data_subgroup = dir_data + 'data_' + data_prefix + '_' + strFilenameInSubGroup + '.csv';
+            filename_data_subgroup = os.path.join(dir_data, 'data_' + data_prefix + '_' + strFilenameInSubGroup + '.csv');
             print(filename_data_subgroup)
             subgroup_df = pd.read_csv(filename_data_subgroup);
             # subgroup_df = subgroup_df.drop(event_column_name, axis=1);
@@ -93,7 +93,7 @@ class DataPreparer:
         sub = 'diag';
         diag_group_names = self.options.getDiagGroupNames();
         strFilenameInSubGroup = dataset + '_' + sub + '_' + grouping;
-        filename_data_subgroup = dir_data + 'data_' + data_prefix + '_' + strFilenameInSubGroup + '.csv';
+        filename_data_subgroup = os.path.join(dir_data, 'data_' + data_prefix + '_' + strFilenameInSubGroup + '.csv');
         print(filename_data_subgroup)
         subgroup_df = pd.read_csv(filename_data_subgroup, usecols=diag_group_names);
         # group_names = list(subgroup_df.columns);
@@ -149,7 +149,7 @@ class DataPreparer:
 
         for sub in subgroups:
             strFilenameInSubGroup = dataset + '_' + sub + '_' + grouping;
-            filename_data_subgroup = dir_data + 'data_' + data_prefix + '_' + strFilenameInSubGroup + '.csv';
+            filename_data_subgroup = os.path.join(dir_data, 'data_' + data_prefix + '_' + strFilenameInSubGroup + '.csv');
             print(filename_data_subgroup)
             subgroup_df = pd.read_csv(filename_data_subgroup);
             # subgroup_df = subgroup_df.drop(event_column_name, axis=1);
@@ -174,8 +174,8 @@ class DataPreparer:
         chunksize = self.options.getChunkSize();
 
         [filename_in_str, filename_out_str] = self.__getFilenameOptionStr()
-        filename_data_out = dir_data + 'data_' + data_prefix + '_' + filename_out_str + '.csv';
-        filename_data_in = dir_data + 'data_' + data_prefix + '_' + filename_in_str + '.csv';
+        filename_data_out = os.path.join(dir_data, 'data_' + data_prefix + '_' + filename_out_str + '.csv');
+        filename_data_in = os.path.join(dir_data, 'data_' + data_prefix + '_' + filename_in_str + '.csv');
         if featurereduction is None:
             df_base = pd.read_csv(filename_data_in);
         elif not featurereduction['method'] == 'ONLYDIAG':

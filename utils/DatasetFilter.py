@@ -38,7 +38,8 @@ class DatasetFilter:
 
         strFilenameIn = dataset + '_' + filename_options_in;
         strFilenameOut = strFilenameIn + '_' + filterKey;
-        filename_data_in = dir_data + 'data_' + data_prefix + '_' + strFilenameIn + '.csv';
+        # filename_data_in = dir_data + 'data_' + data_prefix + '_' + strFilenameIn + '.csv';
+        filename_data_in = self.options.getFilename();
         # filename_data_out = dir_data + 'data_' + strFilenameOut + '.csv';
 
         df = pd.read_csv(filename_data_in);
@@ -49,6 +50,27 @@ class DatasetFilter:
 
 
     def filterDataDisease(self):
+        dir_data = self.options.getDirData();
+        data_prefix = self.options.getDataPrefix();
+        dataset = self.options.getDatasetName();
+        featureset_str = self.options.getFeatureSetStr();
+        encoding = self.options.getEncodingScheme();
+        grouping = self.options.getGroupingName();
+        disease_name = self.options.getOptionsFiltering();
+        filename_options_in = featureset_str + '_' + encoding + '_' + grouping;
+
+        strFilenameIn = dataset + '_' + filename_options_in;
+        strFilenameOut = strFilenameIn + '_' + disease_name;
+        filename_data_in = dir_data + 'data_' + data_prefix + '_' + strFilenameIn + '.csv';
+        filename_data_out = dir_data + 'data_' + data_prefix + '_' + strFilenameOut + '.csv';
+
+        df = pd.read_csv(filename_data_in);
+        df_filtered = self._filterColumnsDiagnosisDiseases(df);
+        df_filtered.to_csv(filename_data_out, line_terminator='\n', index=False);
+        return df_filtered;
+
+
+    def filterDataEntlassBereich(self, ):
         dir_data = self.options.getDirData();
         data_prefix = self.options.getDataPrefix();
         dataset = self.options.getDatasetName();

@@ -14,10 +14,11 @@ from learning.ClassifierSVM import ClassifierSVM
 import helpers.constants as constantsPATREC
 
 if __name__ == '__main__':
-    dirProject = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/';
-    dirData = dirProject + 'data/';
-    dirResultsBase = dirProject + 'results/';
-    dirModelsBase = dirProject + 'classifiers/'
+    # dirProject = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/';
+    dirProject = '/home/thomas/fusessh/scicore/projects/patrec/projects/PATREC'
+    dirData = os.path.join(dirProject, 'data');
+    dirResultsBase = os.path.join(dirProject, 'results');
+    dirModelsBase = os.path.join(dirProject, 'classifiers')
 
     dict_options_dataset_training = {
     'dir_data':                 dirData,
@@ -27,11 +28,7 @@ if __name__ == '__main__':
     'encoding':                 'categorical',
     'newfeatures':              {'names': constantsPATREC.NEW_FEATURES},
     'featurereduction':         None,
-<<<<<<< Updated upstream
-    'filtering':                'oncology'
-=======
-    'filtering':                'chronic_lung'
->>>>>>> Stashed changes
+    'filtering':                'EntlassBereich_Med'
 }
 
     options_training = DatasetOptions(dict_options_dataset_training);
@@ -40,19 +37,11 @@ if __name__ == '__main__':
 
     print('dataset filename: ' + str(dataset_training.getFilename()))
 
-<<<<<<< Updated upstream
-    dict_opt_rf = {'n_estimators': 100, 'max_depth': 5};
-    options_rf = OptionsRF(dirModelsBase, options_training.getFilenameOptions(filteroptions=True), options_clf=dict_opt_rf);
-    clf_rf = ClassifierRF(options_rf);
-
-    dict_opt_lr = {'penalty': 'l2', 'C': 0.0001};
-=======
-    dict_opt_rf = {'n_estimators': 500, 'max_depth': 50};
+    dict_opt_rf = {'n_estimators': 500, 'max_depth': 15};
     options_rf = OptionsRF(dirModelsBase, options_training.getFilenameOptions(filteroptions=True), options_clf=dict_opt_rf);
     clf_rf = ClassifierRF(options_rf);
 
     dict_opt_lr = {'penalty': 'l1', 'C': 0.5};
->>>>>>> Stashed changes
     options_lr = OptionsLogisticRegression(dirModelsBase, options_training.getFilenameOptions(filteroptions=True), options_clf=dict_opt_lr);
     clf_lr = ClassifierLogisticRegression(options_lr);
 
@@ -61,8 +50,8 @@ if __name__ == '__main__':
     options_svm = OptionsSVM(dirModelsBase, options_training.getFilenameOptions(filteroptions=True), options_clf=dict_options_svm)
     clf_svm = ClassifierSVM(options_svm);
 
-    options_clf = options_rf
-    clf = clf_rf;
+    options_clf = options_lr
+    clf = clf_lr;
 
     results_all_runs_train = Results(dirResultsBase, options_training, options_clf, 'train');
     results_all_runs_eval = Results(dirResultsBase, options_training, options_clf, 'eval');

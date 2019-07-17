@@ -1,4 +1,4 @@
-
+import os
 import sys
 from datetime import datetime
 
@@ -105,8 +105,8 @@ class FeatureReducer:
         print('reduction method: ' + str(reduction_method))
         if reduction_method is not None:
             [filename_str_in, filename_str_out] = self.__getFilenameOptionsStr();
-            filename_data_in = dir_data + 'data_' + data_prefix + '_' + filename_str_in + '.csv';
-            filename_data_out = dir_data + 'data_' + data_prefix + '_' + filename_str_out + '.csv';
+            filename_data_in = os.path.join(dir_data, 'data_' + data_prefix + '_' + filename_str_in + '.csv');
+            filename_data_out = os.path.join(dir_data, 'data_' + data_prefix + '_' + filename_str_out + '.csv');
             df = pd.read_csv(filename_data_in);
 
             if reduction_method == 'NOADMIN':

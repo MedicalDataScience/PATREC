@@ -1,3 +1,5 @@
+import os
+import sys
 import sys
 import pandas as pd
 
@@ -41,7 +43,7 @@ class FeatureCreator:
 
     def __calculateDRGDiffYear(self, df, df_drg, feature_name, year):
         dir_data = self.options.getDirData();
-        filename_swissdrg_year = dir_data + 'swissdrg_alos_' + str(year) + '.xlsx';
+        filename_swissdrg_year = os.path.join(dir_data, 'swissdrg_alos_' + str(year) + '.xlsx');
         df_drg_year = pd.read_excel(filename_swissdrg_year, sheetname='Akutspitäler');
 
         cnt_drgnotfound = 0;
@@ -72,7 +74,7 @@ class FeatureCreator:
 
     def __calculateRelDRGDiffYear(self, df, df_drg, feature_name, year):
         dir_data = self.options.getDirData();
-        filename_swissdrg_year = dir_data + 'swissdrg_alos_' + str(year) + '.xlsx';
+        filename_swissdrg_year = os.path.join(dir_data, 'swissdrg_alos_' + str(year) + '.xlsx');
         df_drg_year = pd.read_excel(filename_swissdrg_year, sheetname='Akutspitäler');
 
         name_newfeature = 'rel_diff_drg_' + feature_name
@@ -105,7 +107,7 @@ class FeatureCreator:
 
     def __calculateDRGalosYear(self, df, df_drg, feature_name, year):
         dir_data = self.options.getDirData();
-        filename_swissdrg_year = dir_data + 'swissdrg_alos_' + str(year) + '.xlsx';
+        filename_swissdrg_year = os.path.join(dir_data, 'swissdrg_alos_' + str(year) + '.xlsx');
         df_drg_year = pd.read_excel(filename_swissdrg_year, sheetname='Akutspitäler');
         cnt_drgnotfound = 0;
         for k, row in df_drg.iterrows():
@@ -132,7 +134,7 @@ class FeatureCreator:
 
     def __calculateDRGRatioLosYear(self, df, df_drg, feature_name, year):
         dir_data = self.options.getDirData();
-        filename_swissdrg_year = dir_data + 'swissdrg_alos_' + str(year) + '.xlsx';
+        filename_swissdrg_year = os.path.join(dir_data, 'swissdrg_alos_' + str(year) + '.xlsx');
         df_drg_year = pd.read_excel(filename_swissdrg_year, sheetname='Akutspitäler');
         name_newfeature = 'ratio_drg_los_' + feature_name;
         cnt_drgnotfound = 0;
@@ -212,7 +214,7 @@ class FeatureCreator:
         data_prefix = self.options.getDataPrefix();
         df_num = pd.DataFrame(columns=['num' + name_subgroup]);
         strFilenameIn = dataset + '_' + name_subgroup + '_clean';
-        filename_data_subgroup_in = dir_data + 'data_' + data_prefix + '_' + strFilenameIn + '.csv';
+        filename_data_subgroup_in = os.path.join(dir_data, 'data_' + data_prefix + '_' + strFilenameIn + '.csv');
         data_reader = pd.read_csv(filename_data_subgroup_in, chunksize=chunksize);
         for k, chunk in enumerate(data_reader):
             chunk = chunk.drop('Fall', axis=1);
@@ -248,8 +250,8 @@ class FeatureCreator:
         dir_data = self.options.getDirData();
         data_prefix = self.options.getDataPrefix();
         [filename_str_in, filename_str_out] = self.__getFilenameOptionStr()
-        filename_data_in = dir_data + 'data_' + data_prefix + '_' + filename_str_in + '.csv';
-        filename_data_out = dir_data + 'data_' + data_prefix + '_' + filename_str_out + '.csv';
+        filename_data_in = os.path.join(dir_data, 'data_' + data_prefix + '_' + filename_str_in + '.csv');
+        filename_data_out = os.path.join(dir_data, 'data_' + data_prefix + '_' + filename_str_out + '.csv');
         df = pd.read_csv(filename_data_in);
 
         df_newfeatures = self.__addFeaturesFromCleanData(df);
