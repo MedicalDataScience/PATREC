@@ -29,8 +29,8 @@ class NeuralNetModel():
             os.makedirs(self.flags.model_dir)
 
         if self.mode == 'train':
-            if not self.dataset_options_eval is None:
-                self.dataset_handler_train = NeuralNetDatasetHandler(self.flags.model_dir, self.dataset_options_train, feature_columns, 'train');
+            if self.dataset_options_eval is not None:
+                self.dataset_handler_train = NeuralNetDatasetHandler(self.flags.model_dir, self.dataset_options_train, feature_columns, 'train', self.dataset_options_train);
                 self.dataset_handler_eval = NeuralNetDatasetHandler(self.flags.model_dir, self.dataset_options_eval, feature_columns, 'eval');
             else:
                 self.dataset_handler_train = NeuralNetDatasetHandler(self.flags.model_dir, self.dataset_options_train, feature_columns, 'train');
@@ -63,9 +63,13 @@ class NeuralNetModel():
         suffix_modeldir = suffix_modeldir + '_learningrate_' + str(learningrate);
         suffix_modeldir = suffix_modeldir + '_batchnorm_' + str(batchnorm);
         suffix_modeldir = suffix_modeldir + '_batchsize_' + str(batchsize);
+
+        # Add filtering option if specified
+        if self.dataset_handler_train.dataset.options.options_filtering is not None:
+            suffix_modeldir += '_filtering_' + str(self.dataset_handler_train.dataset.options.options_filtering)
+
         model_dir = modeldir_base + '/' + suffix_modeldir;
         self.flags.model_dir = model_dir;
-
 
     def _input_fn_train(self):
         dataset = self.dataset_handler_train.readDatasetTF();
@@ -104,20 +108,21 @@ class NeuralNetModel():
             if self.mode == 'train':
                 self._setModelDir();
                 # Clean up the model directory if present
-                if not self.flags.model_dir == self.flags.pretrained_model_dir:
-                    shutil.rmtree(self.flags.model_dir, ignore_errors=True)
+                # if not self.flags.model_dir == self.flags.pretrained_model_dir:
+                #     shutil.rmtree(self.flags.model_dir, ignore_errors=True)
             self.model = NeuralNetEstimator(self.feature_columns, self.flags);
 
 
     def createDatasets(self):
         if self.mode == 'train':
-            if not self.dataset_options_eval is None:
+            if self.dataset_options_eval is not None:
                 dataset_maker_train = NeuralNetDatasetMaker('train', self.flags.model_dir, self.dataset_options_train);
                 dataset_maker_eval = NeuralNetDatasetMaker('eval', self.flags.model_dir, self.dataset_options_eval);
                 dataset_maker_train.createDatasets();
                 dataset_maker_eval.createDatasets();
             else:
-                dataset_maker = NeuralNetDatasetMaker('traineval', self.flags.model_dir, self.dataset_options_train, balanced_datasets=False);
+                # dataset_maker = NeuralNetDatasetMaker('traineval', self.flags.model_dir, self.dataset_options_train, balanced_datasets=False);
+                dataset_maker = NeuralNetDatasetMaker('traineval', self.flags.model_dir, self.dataset_options_train);
                 dataset_maker.createDatasets();
         elif self.mode == 'test':
             dataset_maker = NeuralNetDatasetMaker('test', self.flags.model_dir, self.dataset_options_test);

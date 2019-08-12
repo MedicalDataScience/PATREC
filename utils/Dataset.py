@@ -22,7 +22,9 @@ class Dataset:
         filter = DatasetFilter(self.options)
         options_filtering = self.options.getOptionsFiltering();
         if options_filtering in diseases:
-            self.df = filter.filterDataDisease();
+            self.df = filter.filterDataDisease()
+        elif options_filtering.split("_")[0] in self.options.getCategoricalFeatures():
+            self.df = filter.filterCategoricalColumn(options_filtering)
         else:
             self.df = filter.filterDataBinaryColumns(options_filtering)
 

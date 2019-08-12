@@ -32,6 +32,7 @@ if not tf_base_dir in sys.path:
     sys.path.append(tf_base_dir);
 
 DIRPROJECT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/';
+# DIRPROJECT = DIRPROJECT.replace("\\", "/")
 
 from official.utils.flags import core as flags_core
 from official.utils.logs import hooks_helper
@@ -63,13 +64,17 @@ def define_flags():
 
     flags.adopt_module_key_flags(flags_core)
 
+    model_dir = os.path.join(DIRPROJECT, "patients_model")
+    export_dir = os.path.join(model_dir, "export_model")
+
     flags_core.set_defaults(data_dir=DIRPROJECT + 'data/',
-                            model_dir='/tmp/patients_model',
-                            export_dir='/tmp/patients_model/export_model',
+                            model_dir=model_dir,
+                            export_dir=export_dir,
                             hidden_units=[60, 40, 40, 20],
                             train_epochs=1000,
                             epochs_between_evals=1,
-                            batch_size=320)
+                            batch_size=320,
+                            learningrate=0.001)
 
 
 def run_deep(flags_obj):
@@ -78,7 +83,8 @@ def run_deep(flags_obj):
     flags_obj: An object containing parsed flag values.
     """
 
-    dirProject = '/home/thomas/fusessh/scicore/projects/patrec/projects/PATREC'
+    # dirProject = '/home/thomas/fusessh/scicore/projects/patrec/projects/PATREC'
+    dirProject = "Z:\\projects\\PATREC"
     dirData = os.path.join(dirProject, 'data');
     dict_options_dataset_training = {
         'dir_data':         dirData,
@@ -88,7 +94,9 @@ def run_deep(flags_obj):
         'encoding':         'embedding',
         'newfeatures':      None,
         'featurereduction': None,
-        'filtering':        None
+        'filtering':        'EntlassBereich_Gyn',
+        'balanced':         False,
+        'resample':         True
     }
     dataset_options_train = DatasetOptions(dict_options_dataset_training);
 

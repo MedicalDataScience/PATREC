@@ -1,5 +1,6 @@
 
 import sys
+import os
 from utils.Dataset import Dataset
 
 
@@ -18,7 +19,7 @@ class NeuralNetDatasetMaker:
     def createDatasets(self):
         print('_getFilenameDatasetBalanced: ' + str(self.mode))
         filename_dataset_base = self.dataset_options.getFilename();
-        filename_prefix = self.dir_model + '/' + filename_dataset_base.split('/')[-1][:-4];
+        filename_prefix = self.dir_model + os.sep + filename_dataset_base.split(os.sep)[-1][:-4];
         if self.mode == 'traineval':
             if self.balanced_datasets:
                 [df_training, df_testing] = self.dataset.getBalancedSubsetTrainingAndTesting();
@@ -66,7 +67,7 @@ class NeuralNetDatasetMaker:
     def createDatasetsAutoEncoder(self):
         print('_getFilenameDatasetBalanced: ' + str(self.mode))
         filename_dataset_base = self.dataset_options.getFilename();
-        filename_prefix = self.dir_model + '/' + filename_dataset_base.split('/')[-1][:-4];
+        filename_prefix = self.dir_model + os.sep + filename_dataset_base.split(os.sep)[-1][:-4];
         if self.mode == 'traineval':
             df = self.dataset.getData();
             df = df.sample(frac=1);

@@ -102,7 +102,8 @@ class NeuralNetEstimator:
         global_step = tf.train.get_global_step();
         starter_learning_rate = params['learning_rate'];
         learning_rate = tf.train.exponential_decay(starter_learning_rate, global_step, 1000000, 0.96, staircase=True)
-        optimizer = tf.train.AdagradOptimizer(learning_rate=learning_rate);
+        # optimizer = tf.train.AdagradOptimizer(learning_rate=learning_rate);
+        optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
         # optimizer = tf.train.ProximalAdagradOptimizer(
         #    learning_rate=params['learning_rate'],
         #    l1_regularization_strength=0.001
