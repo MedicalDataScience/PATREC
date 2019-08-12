@@ -3,20 +3,27 @@ import shutil
 
 import tensorflow as tf
 from tensorflow.python.summary import summary
+from privacy.analysis import rdp_accountant, privacy_ledger
+from privacy.optimizers import dp_optimizer
+
 
 class NeuralNetEstimator:
 
-    def __init__(self, feature_columns, flags):
-        self.feature_columns = feature_columns;
-        self.flags = flags;
-        self.estimator = None;
-        return;
+    def __init__(self, feature_columns, flags, training_samples_count):
+        self.feature_columns = feature_columns
+        self.flags = flags
+        self.estimator = None
 
+        # DP necessary members
+        self.privacy_ledger = None
+        self.q = None
+        self.training_samples_count = training_samples_count
+        self.rdp_orders = None
+        return
 
     def _add_hidden_layer_summary(self, value, tag):
         summary.scalar('%s/fraction_of_zero_values' % tag, tf.nn.zero_fraction(value))
         summary.histogram('%s/activation' % tag, value)
-
 
     def _dense_batch_relu(self, input, num_nodes, phase, layer_name, batchnorm, dropout):
         if batchnorm:
@@ -27,33 +34,32 @@ class NeuralNetEstimator:
 
         if dropout is not None:
             out = tf.layers.dropout(out, rate=dropout, training=phase)
-        return out;
-
+        return out
 
     def _dense_batchnorm_fn(self, features, labels, mode, params):
         """Model function for Estimator."""
-        hidden_units = params['hidden_units'];
+        hidden_units = params['hidden_units']
         dropout = params['dropout']
         batchnorm = params['batchnorm']
 
-        input_layer = tf.feature_column.input_layer(features, params['feature_columns']);
+        input_layer = tf.feature_column.input_layer(features, params['feature_columns'])
         for l_id, num_units in enumerate(hidden_units):
             l_name = 'hiddenlayer_%d' % l_id
             l = self._dense_batch_relu(input_layer, num_units, mode == tf.estimator.ModeKeys.TRAIN, l_name, batchnorm,
-                                 dropout);
+                                       dropout)
             self._add_hidden_layer_summary(l, l_name)
-            input_layer = l;
+            input_layer = l
 
         if batchnorm:
             logits = tf.layers.dense(input_layer, 2, activation=None, name='logits')
-            logits = tf.layers.batch_normalization(logits, training=(mode == tf.estimator.ModeKeys.TRAIN));
+            logits = tf.layers.batch_normalization(logits, training=(mode == tf.estimator.ModeKeys.TRAIN))
         else:
             logits = tf.layers.dense(input_layer, 2, activation=None, name='logits')
         self._add_hidden_layer_summary(logits, 'logits')
 
         # Reshape output layer to 1-dim Tensor to return predictions
-        probabilities = tf.nn.softmax(logits);
-        predictions = tf.round(probabilities);
+        probabilities = tf.nn.softmax(logits)
+        predictions = tf.round(probabilities)
         predicted = tf.argmax(predictions, axis=1)
         # Provide an estimator spec for `ModeKeys.PREDICT`.
         if mode == tf.estimator.ModeKeys.PREDICT:
@@ -67,21 +73,31 @@ class NeuralNetEstimator:
                     'probabilities': probabilities
                 })
 
-        cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=tf.cast(labels, tf.int32), logits=logits);
-        loss = tf.reduce_mean(cross_entropy)
+        cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=tf.cast(labels, tf.int32), logits=logits)
+        if self.flags.enable_dp:
+            loss = cross_entropy
+        else:
+            loss = tf.reduce_mean(cross_entropy)
 
         # Compute evaluation metrics.
         # mean_squared_error = tf.metrics.mean_squared_error(labels=tf.cast(labels, tf.float64), predictions=tf.cast(predictions, tf.float64), name='mean_squared_error')
-        accuracy = tf.metrics.accuracy(labels=tf.cast(labels, tf.float64), predictions=tf.cast(predicted, tf.float64), name='accuracy')
-        precision = tf.metrics.precision(labels=tf.cast(labels, tf.float64), predictions=tf.cast(predicted, tf.float64), name='precision')
-        recall = tf.metrics.recall(labels=tf.cast(labels, tf.float64), predictions=tf.cast(predicted, tf.float64), name='recall')
+        accuracy = tf.metrics.accuracy(labels=tf.cast(labels, tf.float64), predictions=tf.cast(predicted, tf.float64),
+                                       name='accuracy')
+        precision = tf.metrics.precision(labels=tf.cast(labels, tf.float64), predictions=tf.cast(predicted, tf.float64),
+                                         name='precision')
+        recall = tf.metrics.recall(labels=tf.cast(labels, tf.float64), predictions=tf.cast(predicted, tf.float64),
+                                   name='recall')
         auc = tf.metrics.auc(labels=tf.cast(labels, tf.float64), predictions=probabilities[:, 1], name='auc')
-        fp = tf.metrics.false_positives(labels=tf.cast(labels, tf.float64), predictions=tf.cast(predicted, tf.float64), name='false_positives')
-        tp = tf.metrics.true_positives(labels=tf.cast(labels, tf.float64), predictions=tf.cast(predicted, tf.float64), name='true_positives')
-        fn = tf.metrics.false_negatives(labels=tf.cast(labels, tf.float64), predictions=tf.cast(predicted, tf.float64), name='false_negatives')
-        tn = tf.metrics.true_negatives(labels=tf.cast(labels, tf.float64), predictions=tf.cast(predicted, tf.float64), name='false_negatives')
+        fp = tf.metrics.false_positives(labels=tf.cast(labels, tf.float64), predictions=tf.cast(predicted, tf.float64),
+                                        name='false_positives')
+        tp = tf.metrics.true_positives(labels=tf.cast(labels, tf.float64), predictions=tf.cast(predicted, tf.float64),
+                                       name='true_positives')
+        fn = tf.metrics.false_negatives(labels=tf.cast(labels, tf.float64), predictions=tf.cast(predicted, tf.float64),
+                                        name='false_negatives')
+        tn = tf.metrics.true_negatives(labels=tf.cast(labels, tf.float64), predictions=tf.cast(predicted, tf.float64),
+                                       name='false_negatives')
 
-        tf.summary.scalar('accuracy', accuracy[1]);
+        tf.summary.scalar('accuracy', accuracy[1])
 
         if mode == tf.estimator.ModeKeys.EVAL:
             avg_loss = tf.reduce_mean(cross_entropy)
@@ -98,16 +114,21 @@ class NeuralNetEstimator:
                            'false negatives': fn
                            }
 
-        # learning_rate = params['learning_rate'];
-        global_step = tf.train.get_global_step();
-        starter_learning_rate = params['learning_rate'];
+        global_step = tf.train.get_global_step()
+        starter_learning_rate = params['learning_rate']
         learning_rate = tf.train.exponential_decay(starter_learning_rate, global_step, 1000000, 0.96, staircase=True)
-        # optimizer = tf.train.AdagradOptimizer(learning_rate=learning_rate);
-        optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
-        # optimizer = tf.train.ProximalAdagradOptimizer(
-        #    learning_rate=params['learning_rate'],
-        #    l1_regularization_strength=0.001
-        # )
+
+        # If differential privacy is enabled, use it
+        if self.flags.enable_dp:
+            optimizer = dp_optimizer.DPAdamGaussianOptimizer(learning_rate=learning_rate, l2_norm_clip=self.flags.dp_c,
+                                                             noise_multiplier=self.flags.dp_sigma,
+                                                             num_microbatches=self.flags.dp_num_microbatches,
+                                                             ledger=self.privacy_ledger)
+
+        # Otherwise just use a normal ADAMOptimizer
+        else:
+            optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
+
         update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
         with tf.control_dependencies(update_ops):
             train_op = optimizer.minimize(loss=loss, global_step=global_step)
@@ -121,7 +142,6 @@ class NeuralNetEstimator:
             training_hooks=None,
             evaluation_hooks=None, )
 
-
     def _build_estimator(self):
         tf.reset_default_graph()
         """Build an estimator appropriate for the given model type."""
@@ -133,8 +153,8 @@ class NeuralNetEstimator:
         run_config = tf.estimator.RunConfig().replace(
             session_config=tf.ConfigProto(device_count={'GPU': 0}))
 
-        #warm start settings:
-        ws = None;
+        # warm start settings:
+        ws = None
         if self.flags.continue_training:
             # like that: all weights (input layer and hidden weights are warmstarted)
             if self.flags.pretrained_model_dir is not None:
@@ -144,14 +164,21 @@ class NeuralNetEstimator:
                                                     )
             else:
                 print('continue_training flag is set to True, but not pretrained_model_dir_specified...exit')
-                sys.exit();
-
+                sys.exit()
 
         params_batchnorm = {'feature_columns': deep_columns,
                             'hidden_units': self.flags.hidden_units,
                             'batchnorm': self.flags.batchnorm,
                             'dropout': self.flags.dropout,
-                            'learning_rate': self.flags.learningrate};
+                            'learning_rate': self.flags.learningrate}
+
+        # Configure the privacy objects
+        if self.flags.enable_dp:
+            with tf.get_default_graph().as_default():
+                self.q = self.flags.batch_size * 1.0 / self.training_samples_count
+                self.privacy_ledger = privacy_ledger.PrivacyLedger(population_size=self.training_samples_count,
+                                                                   selection_probability=self.q)
+                self._rdp_orders = [1 + x / 10. for x in range(1, 100)] + list(range(12, 64))
 
         self.estimator = tf.estimator.Estimator(
             model_fn=self._dense_batchnorm_fn,
@@ -161,8 +188,10 @@ class NeuralNetEstimator:
             warm_start_from=ws
         )
 
-
     def getEstimator(self):
         if self.estimator is None:
-            self._build_estimator();
-        return self.estimator;
+            self._build_estimator()
+        return self.estimator
+
+    def privacy_budget_exceeded(self):
+        a = 1

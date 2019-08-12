@@ -15,6 +15,7 @@ from official.utils.logs import hooks_helper
 from official.utils.logs import logger
 from official.utils.misc import model_helpers
 
+
 class NeuralNetModel():
 
     def __init__(self, mode, dict_dataset_options, feature_columns, flags):
@@ -30,19 +31,22 @@ class NeuralNetModel():
 
         if self.mode == 'train':
             if self.dataset_options_eval is not None:
-                self.dataset_handler_train = NeuralNetDatasetHandler(self.flags.model_dir, self.dataset_options_train, feature_columns, 'train', self.dataset_options_train);
-                self.dataset_handler_eval = NeuralNetDatasetHandler(self.flags.model_dir, self.dataset_options_eval, feature_columns, 'eval');
+                self.dataset_handler_train = NeuralNetDatasetHandler(self.flags.model_dir, self.dataset_options_train,
+                                                                     feature_columns, 'train',
+                                                                     self.dataset_options_train);
+                self.dataset_handler_eval = NeuralNetDatasetHandler(self.flags.model_dir, self.dataset_options_eval,
+                                                                    feature_columns, 'eval');
             else:
-                self.dataset_handler_train = NeuralNetDatasetHandler(self.flags.model_dir, self.dataset_options_train, feature_columns, 'train');
-                self.dataset_handler_eval = NeuralNetDatasetHandler(self.flags.model_dir, self.dataset_options_train, feature_columns, 'eval');
+                self.dataset_handler_train = NeuralNetDatasetHandler(self.flags.model_dir, self.dataset_options_train,
+                                                                     feature_columns, 'train');
+                self.dataset_handler_eval = NeuralNetDatasetHandler(self.flags.model_dir, self.dataset_options_train,
+                                                                    feature_columns, 'eval');
         elif self.mode == 'test':
             self.dataset_handler_test = NeuralNetDatasetHandler(self.dataset_options_test, feature_columns, 'test');
-
 
         self.model = None;
         self.flags.hidden_units = [int(u) for u in self.flags.hidden_units];
         return;
-
 
     def _setModelDir(self):
         modeldir_base = self.flags.model_dir;
@@ -89,7 +93,6 @@ class NeuralNetModel():
         dataset = dataset.batch(self.flags.batch_size);
         return dataset;
 
-
     def export_model(self):
         """Export to SavedModel format.
         Args:
@@ -102,7 +105,6 @@ class NeuralNetModel():
         example_input_fn = (tf.estimator.export.build_parsing_serving_input_receiver_fn(feature_spec))
         r = estimator.export_savedmodel(self.flags.export_dir, example_input_fn)
 
-
     def _getModelEstimator(self):
         if self.model is None:
             if self.mode == 'train':
@@ -110,8 +112,8 @@ class NeuralNetModel():
                 # Clean up the model directory if present
                 # if not self.flags.model_dir == self.flags.pretrained_model_dir:
                 #     shutil.rmtree(self.flags.model_dir, ignore_errors=True)
-            self.model = NeuralNetEstimator(self.feature_columns, self.flags);
-
+            self.model = NeuralNetEstimator(self.feature_columns, self.flags,
+                                            self.dataset_handler_train.dataset.getNumSamplesBalancedSubset());
 
     def createDatasets(self):
         if self.mode == 'train':
@@ -127,7 +129,6 @@ class NeuralNetModel():
         elif self.mode == 'test':
             dataset_maker = NeuralNetDatasetMaker('test', self.flags.model_dir, self.dataset_options_test);
             dataset_maker.createDatasets();
-
 
     def train(self):
 
@@ -159,7 +160,8 @@ class NeuralNetModel():
             estimator.train(input_fn=self._input_fn_train)
             results = estimator.evaluate(input_fn=self._input_fn_eval)
             # Display evaluation metrics
-            tf.logging.info('Results at epoch %d / %d', (n + 1) * self.flags.epochs_between_evals, self.flags.train_epochs)
+            tf.logging.info('Results at epoch %d / %d', (n + 1) * self.flags.epochs_between_evals,
+                            self.flags.train_epochs)
             tf.logging.info('-' * 60)
 
             for key in sorted(results):
@@ -168,13 +170,17 @@ class NeuralNetModel():
             benchmark_logger.log_evaluation_result(results)
 
             if model_helpers.past_stop_threshold(self.flags.stop_threshold, results['accuracy']):
-                break;
+                break
 
             # Export the model
             print('export the model?')
             if n % 10 == 0 and self.flags.export_dir is not None:
                 self.export_model()
 
+            # Break training loop if DP is enabled and the privacy budget has been used up
+            if estimator.privacy_budget_exceeded():
+                print("Privacy budget met, stopping training")
+                break
 
     def predict(self):
         if self.model is None:
@@ -183,14 +189,11 @@ class NeuralNetModel():
         results = estimator.predict(input_fn=self._input_fn_test)
         return results;
 
-
     def getModelDir(self):
         return self.flags.model_dir;
 
-
     def getFlags(self):
         return self.flags;
-
 
     def getFilenameDatasetBalanced(self):
         if self.mode == 'train':
@@ -203,7 +206,6 @@ class NeuralNetModel():
             print('unknown mode...exit')
             sys.exit();
 
-
     def getWeightsEmbeddingLayer(self, name_embedding):
         if name_embedding == 'main_diag':
             name_embedding_variable = self.feature_columns.getEmbeddingLayerNames()[0];
@@ -215,6 +217,3 @@ class NeuralNetModel():
         estimator = self.model.getEstimator();
         values = estimator.get_variable_value(name_embedding_variable)
         return values;
-
-
-
