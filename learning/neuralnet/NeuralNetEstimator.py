@@ -3,8 +3,24 @@ import shutil
 
 import tensorflow as tf
 from tensorflow.python.summary import summary
-from privacy.analysis import rdp_accountant, privacy_ledger
+from privacy.analysis import privacy_ledger
+from privacy.analysis.rdp_accountant import compute_rdp_from_ledger, get_privacy_spent
 from privacy.optimizers import dp_optimizer
+
+
+class CheckPrivacyBudgetHook(tf.estimator.SessionRunHook):
+    def __init__(self, ledger):
+        self._samples, self._queries = ledger.get_unformatted_ledger()
+
+    def end(self, session):
+        orders = [1 + x / 10.0 for x in range(1, 100)] + list(range(12, 64))
+        samples = session.run(self._samples)
+        queries = session.run(self._queries)
+        formatted_ledger = privacy_ledger.format_ledger(samples, queries)
+        rdp = compute_rdp_from_ledger(formatted_ledger, orders)
+        target_delta = 2e-4
+        eps = get_privacy_spent(orders, rdp, target_delta=target_delta)[0]
+        print('For delta={:.5}, the current epsilon is: {:.5}'.format(target_delta, eps))
 
 
 class NeuralNetEstimator:
@@ -15,10 +31,9 @@ class NeuralNetEstimator:
         self.estimator = None
 
         # DP necessary members
-        self.privacy_ledger = None
-        self.q = None
         self.training_samples_count = training_samples_count
-        self.rdp_orders = None
+        self.q = self.flags.batch_size * 1.0 / self.training_samples_count
+        self.rdp_orders = [1 + x / 10. for x in range(1, 100)] + list(range(12, 64))
         return
 
     def _add_hidden_layer_summary(self, value, tag):
@@ -74,10 +89,12 @@ class NeuralNetEstimator:
                 })
 
         cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=tf.cast(labels, tf.int32), logits=logits)
+        scalar_loss = tf.reduce_mean(cross_entropy)
+
         if self.flags.enable_dp:
-            loss = cross_entropy
+            training_loss = cross_entropy
         else:
-            loss = tf.reduce_mean(cross_entropy)
+            training_loss = scalar_loss
 
         # Compute evaluation metrics.
         # mean_squared_error = tf.metrics.mean_squared_error(labels=tf.cast(labels, tf.float64), predictions=tf.cast(predictions, tf.float64), name='mean_squared_error')
@@ -120,27 +137,31 @@ class NeuralNetEstimator:
 
         # If differential privacy is enabled, use it
         if self.flags.enable_dp:
+            ledger = privacy_ledger.PrivacyLedger(population_size=self.training_samples_count,
+                                                  selection_probability=self.q)
             optimizer = dp_optimizer.DPAdamGaussianOptimizer(learning_rate=learning_rate, l2_norm_clip=self.flags.dp_c,
                                                              noise_multiplier=self.flags.dp_sigma,
                                                              num_microbatches=self.flags.dp_num_microbatches,
-                                                             ledger=self.privacy_ledger)
+                                                             ledger=ledger)
+            training_hooks = [CheckPrivacyBudgetHook(ledger)]
 
         # Otherwise just use a normal ADAMOptimizer
         else:
             optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
+            training_hooks = None
 
         update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
         with tf.control_dependencies(update_ops):
-            train_op = optimizer.minimize(loss=loss, global_step=global_step)
+            train_op = optimizer.minimize(loss=training_loss, global_step=global_step)
 
         # Provide an estimator spec for `ModeKeys.EVAL` and `ModeKeys.TRAIN` modes.
         return tf.estimator.EstimatorSpec(
             mode=mode,
-            loss=loss,
+            loss=scalar_loss,
             train_op=train_op,
             eval_metric_ops=eval_metric_ops,
-            training_hooks=None,
-            evaluation_hooks=None, )
+            training_hooks=training_hooks,
+            evaluation_hooks=None)
 
     def _build_estimator(self):
         tf.reset_default_graph()
@@ -172,14 +193,6 @@ class NeuralNetEstimator:
                             'dropout': self.flags.dropout,
                             'learning_rate': self.flags.learningrate}
 
-        # Configure the privacy objects
-        if self.flags.enable_dp:
-            with tf.get_default_graph().as_default():
-                self.q = self.flags.batch_size * 1.0 / self.training_samples_count
-                self.privacy_ledger = privacy_ledger.PrivacyLedger(population_size=self.training_samples_count,
-                                                                   selection_probability=self.q)
-                self._rdp_orders = [1 + x / 10. for x in range(1, 100)] + list(range(12, 64))
-
         self.estimator = tf.estimator.Estimator(
             model_fn=self._dense_batchnorm_fn,
             model_dir=self.flags.model_dir,
@@ -192,6 +205,3 @@ class NeuralNetEstimator:
         if self.estimator is None:
             self._build_estimator()
         return self.estimator
-
-    def privacy_budget_exceeded(self):
-        a = 1

@@ -78,7 +78,7 @@ class NeuralNetModel():
     def _input_fn_train(self):
         dataset = self.dataset_handler_train.readDatasetTF();
         dataset = dataset.repeat(self.flags.epochs_between_evals);
-        dataset = dataset.batch(self.flags.batch_size);
+        dataset = dataset.batch(self.flags.batch_size, drop_remainder=self.flags.enable_dp);
         return dataset;
 
     def _input_fn_eval(self):
@@ -178,9 +178,9 @@ class NeuralNetModel():
                 self.export_model()
 
             # Break training loop if DP is enabled and the privacy budget has been used up
-            if estimator.privacy_budget_exceeded():
-                print("Privacy budget met, stopping training")
-                break
+            # if estimator.privacy_budget_exceeded():
+            #     print("Privacy budget met, stopping training")
+            #     break
 
     def predict(self):
         if self.model is None:

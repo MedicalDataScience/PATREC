@@ -74,15 +74,15 @@ def define_flags():
                             hidden_units=[60, 40, 40, 20],
                             train_epochs=1000,
                             epochs_between_evals=1,
-                            batch_size=320,
+                            batch_size=64,
                             learningrate=0.001)
 
     flags.DEFINE_bool('enable_dp', True, 'Enable Differential Privacy')
     flags.DEFINE_float('dp_eps', 10, 'Differential Privacy Epsilon')
-    flags.DEFINE_float('dp_delta', 1e-5, 'Differential Privacy Delta')
+    flags.DEFINE_float('dp_delta', 2e-4, 'Differential Privacy Delta')
     flags.DEFINE_float('dp_sigma', 0.5, 'Differential Privacy Noise Amount')
-    flags.DEFINE_float('dp_c', 4, 'Differential Privacy Norm Clipping Amount')
-    flags.DEFINE_integer('dp_num_microbatches', 80, 'Number of microbatches to use in DP optimizer')
+    flags.DEFINE_float('dp_c', 1, 'Differential Privacy Norm Clipping Amount')
+    flags.DEFINE_integer('dp_num_microbatches', 64, 'Number of microbatches to use in DP optimizer')
 
 
 def run_deep(flags_obj):
@@ -92,7 +92,7 @@ def run_deep(flags_obj):
     """
 
     # dirProject = '/home/thomas/fusessh/scicore/projects/patrec/projects/PATREC'
-    dirProject = "X:\\projects\\PATREC"
+    dirProject = "Z:\\projects\\PATREC"
     dirData = os.path.join(dirProject, 'data');
     dict_options_dataset_training = {
         'dir_data':         dirData,
