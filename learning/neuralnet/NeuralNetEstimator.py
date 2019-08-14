@@ -9,18 +9,31 @@ from privacy.optimizers import dp_optimizer
 
 
 class CheckPrivacyBudgetHook(tf.estimator.SessionRunHook):
-    def __init__(self, ledger):
+    def __init__(self, ledger, target_epsilon, target_delta, update_op, update_op_placeholder):
         self._samples, self._queries = ledger.get_unformatted_ledger()
+        self._target_epsilon = target_epsilon
+        self._target_delta = target_delta
+        self._update_op = update_op
+        self._update_op_placeholder = update_op_placeholder
+        self._executed = False
 
-    def end(self, session):
-        orders = [1 + x / 10.0 for x in range(1, 100)] + list(range(12, 64))
-        samples = session.run(self._samples)
-        queries = session.run(self._queries)
-        formatted_ledger = privacy_ledger.format_ledger(samples, queries)
-        rdp = compute_rdp_from_ledger(formatted_ledger, orders)
-        target_delta = 2e-4
-        eps = get_privacy_spent(orders, rdp, target_delta=target_delta)[0]
-        print('For delta={:.5}, the current epsilon is: {:.5}'.format(target_delta, eps))
+    # def end(self, session):
+    def after_run(self, run_context, run_values):
+        if not self._executed:
+            orders = [1 + x / 10.0 for x in range(1, 100)] + list(range(12, 64))
+            samples = run_context.session.run(self._samples)
+            queries = run_context.session.run(self._queries)
+            formatted_ledger = privacy_ledger.format_ledger(samples, queries)
+            rdp = compute_rdp_from_ledger(formatted_ledger, orders)
+            target_delta = 2e-4
+            eps = get_privacy_spent(orders, rdp, target_delta=target_delta)[0]
+            print('For delta={:.5}, the current epsilon is: {:.5}'.format(target_delta, eps))
+            run_context.session.run(self._update_op, feed_dict={self._update_op_placeholder: eps})
+            self._executed = True
+
+            if eps >= self._target_epsilon:
+                print("Target epsilon met or exceeded: {:.5}".format(eps))
+                run_context.request_stop()
 
 
 class NeuralNetEstimator:
@@ -33,7 +46,6 @@ class NeuralNetEstimator:
         # DP necessary members
         self.training_samples_count = training_samples_count
         self.q = self.flags.batch_size * 1.0 / self.training_samples_count
-        self.rdp_orders = [1 + x / 10. for x in range(1, 100)] + list(range(12, 64))
         return
 
     def _add_hidden_layer_summary(self, value, tag):
@@ -143,12 +155,20 @@ class NeuralNetEstimator:
                                                              noise_multiplier=self.flags.dp_sigma,
                                                              num_microbatches=self.flags.dp_num_microbatches,
                                                              ledger=ledger)
-            training_hooks = [CheckPrivacyBudgetHook(ledger)]
+
+            # Add summary for DP-Epsilon
+            dp_eps = tf.Variable(0, trainable=False, dtype=tf.float32)
+            dp_eps_placeholder = tf.placeholder(tf.float32)
+            update_dp_eps_op = tf.assign(dp_eps, dp_eps_placeholder)
+            eval_metric_ops['DP-Epsilon'] = dp_eps, tf.metrics.mean(dp_eps)[1]
+
+            eval_hooks = [CheckPrivacyBudgetHook(ledger, self.flags.dp_eps, self.flags.dp_delta, update_dp_eps_op,
+                                                 dp_eps_placeholder)]
 
         # Otherwise just use a normal ADAMOptimizer
         else:
             optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
-            training_hooks = None
+            eval_hooks = None
 
         update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
         with tf.control_dependencies(update_ops):
@@ -160,8 +180,8 @@ class NeuralNetEstimator:
             loss=scalar_loss,
             train_op=train_op,
             eval_metric_ops=eval_metric_ops,
-            training_hooks=training_hooks,
-            evaluation_hooks=None)
+            training_hooks=None,
+            evaluation_hooks=eval_hooks)
 
     def _build_estimator(self):
         tf.reset_default_graph()
@@ -169,10 +189,12 @@ class NeuralNetEstimator:
 
         deep_columns = self.feature_columns.buildModelColumns()
 
-        # Create a tf.estimator.RunConfig to ensure the model is run on CPU, which
-        # trains faster than GPU for this model.
-        run_config = tf.estimator.RunConfig().replace(
-            session_config=tf.ConfigProto(device_count={'GPU': 0}))
+        # Specify whether to use CPU or GPU
+        if self.flags.force_cpu:
+            run_config = tf.estimator.RunConfig().replace(
+                session_config=tf.ConfigProto(device_count={'GPU': 0}))
+        else:
+            run_config = tf.estimator.RunConfig()
 
         # warm start settings:
         ws = None
