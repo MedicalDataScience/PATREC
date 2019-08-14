@@ -156,6 +156,10 @@ class NeuralNetModel():
 
         # Train and evaluate the model every `flags.epochs_between_evals` epochs.
         for n in range(self.flags.train_epochs // self.flags.epochs_between_evals):
+            # Break from loop if privacy budget is exceedeed and differential privacy is enabled
+            if self.flags.enable_dp and self.model.is_privacy_budget_exceeded():
+                break
+
             print('n: ' + str(n))
             estimator.train(input_fn=self._input_fn_train)
             results = estimator.evaluate(input_fn=self._input_fn_eval)
@@ -176,11 +180,6 @@ class NeuralNetModel():
             print('export the model?')
             if n % 10 == 0 and self.flags.export_dir is not None:
                 self.export_model()
-
-            # Break training loop if DP is enabled and the privacy budget has been used up
-            # if estimator.privacy_budget_exceeded():
-            #     print("Privacy budget met, stopping training")
-            #     break
 
     def predict(self):
         if self.model is None:

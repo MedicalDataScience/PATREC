@@ -9,13 +9,14 @@ from privacy.optimizers import dp_optimizer
 
 
 class CheckPrivacyBudgetHook(tf.estimator.SessionRunHook):
-    def __init__(self, ledger, target_epsilon, target_delta, update_op, update_op_placeholder):
+    def __init__(self, ledger, target_epsilon, target_delta, update_op, update_op_placeholder, privacy_exceeded_list):
         self._samples, self._queries = ledger.get_unformatted_ledger()
         self._target_epsilon = target_epsilon
         self._target_delta = target_delta
         self._update_op = update_op
         self._update_op_placeholder = update_op_placeholder
         self._executed = False
+        self._privacy_exceeded_list = privacy_exceeded_list
 
     # def end(self, session):
     def after_run(self, run_context, run_values):
@@ -25,15 +26,17 @@ class CheckPrivacyBudgetHook(tf.estimator.SessionRunHook):
             queries = run_context.session.run(self._queries)
             formatted_ledger = privacy_ledger.format_ledger(samples, queries)
             rdp = compute_rdp_from_ledger(formatted_ledger, orders)
-            target_delta = 2e-4
-            eps = get_privacy_spent(orders, rdp, target_delta=target_delta)[0]
-            print('For delta={:.5}, the current epsilon is: {:.5}'.format(target_delta, eps))
+            eps = get_privacy_spent(orders, rdp, target_delta=self._target_delta)[0]
+            print('For delta={:.5}, the current epsilon is: {:.5}'.format(self._target_delta, eps))
             run_context.session.run(self._update_op, feed_dict={self._update_op_placeholder: eps})
             self._executed = True
 
             if eps >= self._target_epsilon:
                 print("Target epsilon met or exceeded: {:.5}".format(eps))
                 run_context.request_stop()
+
+                # Inform the model that the privacy budget has been exceeded
+                self._privacy_exceeded_list[0] = True
 
 
 class NeuralNetEstimator:
@@ -46,6 +49,7 @@ class NeuralNetEstimator:
         # DP necessary members
         self.training_samples_count = training_samples_count
         self.q = self.flags.batch_size * 1.0 / self.training_samples_count
+        self.privacy_budget_exceeded = [False]
         return
 
     def _add_hidden_layer_summary(self, value, tag):
@@ -64,6 +68,9 @@ class NeuralNetEstimator:
         return out
 
     def _dense_batchnorm_fn(self, features, labels, mode, params):
+        if self.flags.enable_dp:
+            assert not self.is_privacy_budget_exceeded(), "Attempt to train model after privacy budget exceeded"
+
         """Model function for Estimator."""
         hidden_units = params['hidden_units']
         dropout = params['dropout']
@@ -163,7 +170,7 @@ class NeuralNetEstimator:
             eval_metric_ops['DP-Epsilon'] = dp_eps, tf.metrics.mean(dp_eps)[1]
 
             eval_hooks = [CheckPrivacyBudgetHook(ledger, self.flags.dp_eps, self.flags.dp_delta, update_dp_eps_op,
-                                                 dp_eps_placeholder)]
+                                                 dp_eps_placeholder, self.privacy_budget_exceeded)]
 
         # Otherwise just use a normal ADAMOptimizer
         else:
@@ -227,3 +234,6 @@ class NeuralNetEstimator:
         if self.estimator is None:
             self._build_estimator()
         return self.estimator
+
+    def is_privacy_budget_exceeded(self):
+        return self.privacy_budget_exceeded[0]
