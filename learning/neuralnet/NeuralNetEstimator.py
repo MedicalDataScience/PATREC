@@ -33,7 +33,7 @@ class CheckPrivacyBudgetHook(tf.estimator.SessionRunHook):
 
             if eps >= self._target_epsilon:
                 print("Target epsilon met or exceeded: {:.5}".format(eps))
-                run_context.request_stop()
+                # run_context.request_stop()
 
                 # Inform the model that the privacy budget has been exceeded
                 self._privacy_exceeded_list[0] = True
