@@ -81,7 +81,7 @@ class LearnedFeaturesAnalyzer:
 
 
     def plotAvgLearnedFeatures(self, num_features=50):
-        filename = self.dir_plots + 'learnedfeatures_avg_' + self.options_classifier.getFilenameOptions() + '_' + self.options_classifier.filename_options_training_data + '.png';
+        filename = os.path.join(self.dir_plots, 'learnedfeatures_avg_' + self.options_classifier.getFilenameOptions() + '_' + self.options_classifier.filename_options_training_data + '.png');
         print(filename)
         [avg_weights, names] = self._getSortedAvgFeatureWeights(num_features);
         print('start plotting...')

@@ -128,7 +128,7 @@ class Results:
 
 
     def _getDirResults(self, dir_results):
-        str = os.path.join(dir_results, self.classifier_options.getName(), + self.results_type);
+        str = os.path.join(dir_results, self.classifier_options.getName(), self.results_type);
         if not os.path.exists(str):
             os.makedirs(str);
         return str;
@@ -195,7 +195,7 @@ class Results:
 
 
     def getFilenameResults(self, results_measure):
-        filename = self.dir_results + self.filename_options + '_' + results_measure + '.txt';
+        filename = os.path.join(self.dir_results, self.filename_options + '_' + results_measure + '.txt');
         return filename;
 
 
