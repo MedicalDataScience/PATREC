@@ -13,6 +13,7 @@ from analyzing.ResultsAnalyzer import ResultsSingleConfigAnalyzer;
 from analyzing.ResultsAnalyzer import ResultsAnalyzer
 
 import helpers.constantsNZ as constantsNZ
+import helpers.constants as constantsPATREC
 
 def plotOneTrainingSetDifferentTestSets(results_analyzer, dirData, dirModelsBase, dirResultsBase):
     data_prefix = 'patrec'
@@ -213,24 +214,16 @@ def plotDifferentClassifiers(results_analyzer, dirData, dirModelsBase, dirResult
     options_training = DatasetOptions(dict_options_dataset_training);
     options_testing = DatasetOptions(dict_options_dataset_testing);
 
-<<<<<<< Updated upstream
-    dict_opt_rf = {'n_estimators': 100, 'max_depth': 15};
-    options_rf = OptionsRF(dirModelsBase, options_training.getFilenameOptions(filteroptions=True));
-=======
     dict_opt_rf = {'n_estimators': 500, 'max_depth': 50};
     options_rf = OptionsRF(dirModelsBase, options_training.getFilenameOptions(filteroptions=True), options_clf=dict_opt_rf);
->>>>>>> Stashed changes
     results_test_rf = Results(dirResultsBase, options_training, options_rf, 'test', options_testing);
 
     dict_opt_lr_l2 = {'penalty': 'l2', 'C': 0.01};
     options_lr_l2 = OptionsLogisticRegression(dirModelsBase, options_training.getFilenameOptions(filteroptions=True), options_clf=dict_opt_lr_l2);
     results_test_lr_l2 = Results(dirResultsBase, options_training, options_lr_l2, 'test', options_testing);
 
-<<<<<<< Updated upstream
-    dict_opt_lr_l1 = {'penalty': 'l1', 'C': 0.01};
-=======
+
     dict_opt_lr_l1 = {'penalty': 'l1', 'C': 0.5};
->>>>>>> Stashed changes
     options_lr_l1 = OptionsLogisticRegression(dirModelsBase, options_training.getFilenameOptions(filteroptions=True), options_clf=dict_opt_lr_l1);
     results_test_lr_l1 = Results(dirResultsBase, options_training, options_lr_l1, 'test', options_testing);
 
@@ -358,9 +351,6 @@ def plotNNPerformance(results_analyzer, dirData, dirModelsBase, dirResultsBase):
     results_analyzer.plotROCcurveMulitpleConfigs(analyzer, names, f_plot=filename_plot)
 
 
-
-<<<<<<< Updated upstream
-=======
 def plotDiseasePerformances(results_analyzer, dirData, dirModelsBase, dirResultsBase):
     dict_opt_lr = {'penalty': 'l1', 'C': 0.5};
     dict_opt_rf = {'n_estimators': 500, 'max_depth': 50};
@@ -466,13 +456,6 @@ def plotDiseasePerformances(results_analyzer, dirData, dirModelsBase, dirResults
     filename_plot = dirPlotsBase + 'diseases_rf_classification_performance.png'
     results_analyzer.plotROCcurveMulitpleConfigs(analyzer, names, titlePlot=title_plot, f_plot=filename_plot)
 
-
-
-
-
-
-
->>>>>>> Stashed changes
 def plotSGDClassifierPerformance(results_analyzer, dirData, dirModelsBase, dirResultsBase):
 
     dict_options_dataset_testing = {
