@@ -7,13 +7,13 @@ import helpers.constants as constantsPATREC
 
 
 # dirProject = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/';
-dirProject = '/home/thomas/fusessh/scicore/projects/patrec/projects/PATREC'
+dirProject = '/home/thomas/fusessh/scicore/projects/patrec'
 dirData = os.path.join(dirProject, 'data');
 
 dict_dataset_options = {
     'dir_data':                 dirData,
     'data_prefix':              'patrec',
-    'dataset':                  '20122015',
+    'dataset':                  '20162017',
     # 'subgroups':                ['DK'],
     'grouping':                 'verylightgrouping',
     'encoding':                 'embedding',

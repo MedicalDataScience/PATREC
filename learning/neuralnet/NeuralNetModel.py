@@ -31,18 +31,15 @@ class NeuralNetModel():
 
         if self.mode == 'train':
             if self.dataset_options_eval is not None:
-                self.dataset_handler_train = NeuralNetDatasetHandler(self.flags.model_dir, self.dataset_options_train,
-                                                                     feature_columns, 'train',
-                                                                     self.dataset_options_train);
-                self.dataset_handler_eval = NeuralNetDatasetHandler(self.flags.model_dir, self.dataset_options_eval,
-                                                                    feature_columns, 'eval');
+                self.dataset_handler_train = NeuralNetDatasetHandler(self.flags.model_dir, self.dataset_options_train, feature_columns, 'train', self.dataset_options_train);
+                self.dataset_handler_eval = NeuralNetDatasetHandler(self.flags.model_dir, self.dataset_options_eval, feature_columns, 'eval');
             else:
-                self.dataset_handler_train = NeuralNetDatasetHandler(self.flags.model_dir, self.dataset_options_train,
-                                                                     feature_columns, 'train');
-                self.dataset_handler_eval = NeuralNetDatasetHandler(self.flags.model_dir, self.dataset_options_train,
-                                                                    feature_columns, 'eval');
+                self.dataset_handler_train = NeuralNetDatasetHandler(self.flags.model_dir, self.dataset_options_train, feature_columns, 'train');
+                self.dataset_handler_eval = NeuralNetDatasetHandler(self.flags.model_dir, self.dataset_options_train, feature_columns, 'eval');
         elif self.mode == 'test':
-            self.dataset_handler_test = NeuralNetDatasetHandler(self.dataset_options_test, feature_columns, 'test');
+            self.dataset_handler_train = NeuralNetDatasetHandler(self.flags.model_dir, self.dataset_options_train, feature_columns, 'train');
+            self.dataset_handler_eval = NeuralNetDatasetHandler(self.flags.model_dir, self.dataset_options_train, feature_columns, 'eval');
+            self.dataset_handler_test = NeuralNetDatasetHandler(self.flags.model_dir, self.dataset_options_test, feature_columns, 'test');
 
         self.model = None;
         self.flags.hidden_units = [int(u) for u in self.flags.hidden_units];
@@ -107,13 +104,17 @@ class NeuralNetModel():
 
     def _getModelEstimator(self):
         if self.model is None:
+            self._setModelDir();
+            self.flags.export_dir = os.path.join(self.flags.model_dir, 'export_model');
             if self.mode == 'train':
-                self._setModelDir();
                 # Clean up the model directory if present
                 # if not self.flags.model_dir == self.flags.pretrained_model_dir:
                 #     shutil.rmtree(self.flags.model_dir, ignore_errors=True)
-            self.model = NeuralNetEstimator(self.feature_columns, self.flags,
-                                            self.dataset_handler_train.dataset.getNumSamplesBalancedSubset());
+                self.model = NeuralNetEstimator(self.feature_columns, self.flags,
+                                                self.dataset_handler_train.dataset.getNumSamplesBalancedSubset());
+            if self.mode == 'test':
+                self.model = NeuralNetEstimator(self.feature_columns, self.flags,
+                                                self.dataset_handler_test.dataset.getNumSamplesBalancedSubset());
 
     def createDatasets(self):
         if self.mode == 'train':
@@ -182,6 +183,8 @@ class NeuralNetModel():
                 self.export_model()
 
     def predict(self):
+        self.createDatasets();
+
         if self.model is None:
             self._getModelEstimator();
         estimator = self.model.getEstimator();
