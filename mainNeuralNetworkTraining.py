@@ -31,7 +31,9 @@ print(tf_base_dir)
 if not tf_base_dir in sys.path:
     sys.path.append(tf_base_dir);
 
-DIRPROJECT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/';
+DIRPROJECT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# DIRPROJECT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/';
+# DIRPROJECT = DIRPROJECT.replace("\\", "/")
 
 from official.utils.flags import core as flags_core
 from official.utils.logs import hooks_helper
@@ -63,13 +65,25 @@ def define_flags():
 
     flags.adopt_module_key_flags(flags_core)
 
+    model_dir = os.path.join(DIRPROJECT, "patients_model")
+    export_dir = os.path.join(model_dir, "export_model")
+
     flags_core.set_defaults(data_dir=DIRPROJECT + 'data/',
-                            model_dir='/tmp/patients_model',
-                            export_dir='/tmp/patients_model/export_model',
+                            model_dir=model_dir,
+                            export_dir=export_dir,
                             hidden_units=[60, 40, 40, 20],
                             train_epochs=1000,
                             epochs_between_evals=1,
-                            batch_size=320)
+                            batch_size=64,
+                            learningrate=0.001)
+
+    flags.DEFINE_bool('enable_dp', True, 'Enable Differential Privacy')
+    flags.DEFINE_float('dp_eps', 10, 'Differential Privacy Epsilon')
+    flags.DEFINE_float('dp_delta', 1e-5, 'Differential Privacy Delta')
+    flags.DEFINE_float('dp_sigma', 0.5, 'Differential Privacy Noise Amount')
+    flags.DEFINE_float('dp_c', 1, 'Differential Privacy Norm Clipping Amount')
+    flags.DEFINE_integer('dp_num_microbatches', 64, 'Number of microbatches to use in DP optimizer')
+    flags.DEFINE_bool('force_cpu', False, 'Force CPU usage')
 
 
 def run_deep(flags_obj):
@@ -78,7 +92,8 @@ def run_deep(flags_obj):
     flags_obj: An object containing parsed flag values.
     """
 
-    dirProject = '/home/thomas/fusessh/scicore/projects/patrec/projects/PATREC'
+    # dirProject = '/home/thomas/fusessh/scicore/projects/patrec/projects/PATREC'
+    dirProject = "Z:\\projects\\PATREC"
     dirData = os.path.join(dirProject, 'data');
     dict_options_dataset_training = {
         'dir_data':         dirData,
@@ -88,7 +103,9 @@ def run_deep(flags_obj):
         'encoding':         'embedding',
         'newfeatures':      None,
         'featurereduction': None,
-        'filtering':        None
+        'filtering':        None,
+        'balanced':         False,
+        'resample':         True
     }
     dataset_options_train = DatasetOptions(dict_options_dataset_training);
 

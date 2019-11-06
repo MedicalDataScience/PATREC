@@ -1,6 +1,6 @@
 
 import sys
-
+import os
 import tensorflow as tf
 
 
@@ -9,13 +9,14 @@ from utils.Dataset import Dataset
 
 class NeuralNetDatasetHandler:
 
-    def __init__(self, dir_model, dataset_options, feature_columns, mode, balanced_datasets=True):
+    def __init__(self, dir_model, dataset_options, feature_columns, mode, balanced_datasets=True, resample_datasets=False):
         self.dir_model = dir_model;
         self.dataset_options = dataset_options;
         self.dataset = Dataset(self.dataset_options);
         self.feature_columns = feature_columns;
         self.mode = mode;
         self.balanced_datasets = balanced_datasets;
+        self.resample_datasets = resample_datasets
         return;
 
 
@@ -53,7 +54,7 @@ class NeuralNetDatasetHandler:
 
     def _getFilenameDatasetBalanced(self):
         filename_dataset_base = self.dataset_options.getFilename();
-        filename_prefix = self.dir_model + '/' +  filename_dataset_base.split('/')[-1][:-4];
+        filename_prefix = self.dir_model + os.sep + filename_dataset_base.split(os.sep)[-1][:-4];
         if self.mode == 'train':
             filename_train = filename_prefix + '_balanced_train.csv'
             filename = filename_train;
@@ -71,7 +72,7 @@ class NeuralNetDatasetHandler:
 
     def _getFilenamesDatasetAll(self):
         filename_dataset_base = self.dataset_options.getFilename();
-        filename_prefix = self.dir_model + '/' +  filename_dataset_base.split('/')[-1][:-4];
+        filename_prefix = self.dir_model + os.sep + filename_dataset_base.split(os.sep)[-1][:-4];
         if self.mode == 'train':
             filename_train_pos = filename_prefix + '_train_pos.csv'
             filename_train_neg = filename_prefix + '_train_neg.csv'
@@ -92,7 +93,7 @@ class NeuralNetDatasetHandler:
 
     def _getFilenameDatasetAutoEncoder(self):
         filename_dataset_base = self.dataset_options.getFilename();
-        filename_prefix = self.dir_model + '/' + filename_dataset_base.split('/')[-1][:-4];
+        filename_prefix = self.dir_model + os.sep + filename_dataset_base.split(os.sep)[-1][:-4];
         if self.mode == 'train':
             filename_train = filename_prefix + '_balanced_train.csv'
             filename = filename_train;
