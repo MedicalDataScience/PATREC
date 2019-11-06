@@ -205,8 +205,8 @@ class DataCleaner:
             print('subgroup: ' + str(g))
             strFilenameIn = dataset + '_' + g;
             strFilenameOut = dataset + '_' + g + '_' + self.filename_options_out;
-            filename_data_subgroup_in = dir_data + data_prefix + '_' + strFilenameIn + '.csv';
-            filename_data_subgroup_out = dir_data + data_prefix + '_' + strFilenameOut + '.csv';
+            filename_data_subgroup_in = os.path.join(dir_data, data_prefix + '_' + strFilenameIn + '.csv');
+            filename_data_subgroup_out = os.path.join(dir_data, data_prefix + '_' + strFilenameOut + '.csv');
             subgroup_reader = pd.read_csv(filename_data_subgroup_in, chunksize=chunksize);
             for k, chunk in enumerate(subgroup_reader):
                 print('chunk: ' + str(k))

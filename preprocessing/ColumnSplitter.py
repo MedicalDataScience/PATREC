@@ -1,3 +1,4 @@
+import os
 import sys
 import pandas as pd
 
@@ -111,9 +112,9 @@ class ColumnSplitter:
         dir_data = self.options.getDirData();
         dataset = self.options.getDatasetName();
         for g in self.options.getSubgroups():
-            filename_out = dir_data + 'data_' + dataset + '_' + g + '.csv';
+            filename_out = os.path.join(dir_data, 'data_' + dataset + '_' + g + '.csv');
             self.splitColumns(g, filename_out);
-        filename_out_rest = dir_data + 'data_' + dataset + '_REST.csv';
+        filename_out_rest = os.path.join(dir_data, 'data_' + dataset + '_REST.csv');
         self.splitColumns('REST', filename_out_rest);
 
 
