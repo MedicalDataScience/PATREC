@@ -58,6 +58,17 @@ class NeuralNetDatasetMaker:
                 sys.exit();
 
 
+    def removeDatasets(self):
+        filename_dataset_base = self.dataset_options.getFilename();
+        filename_prefix = self.dir_model + os.sep + filename_dataset_base.split(os.sep)[-1][:-4];
+        if self.balanced_datasets:
+            filename_dataset = filename_prefix + '_balanced_' + self.mode + '.csv'
+            print('remove: ' + str(filename_dataset))
+            os.remove(filename_dataset);
+        else:
+            print('no valid configuration of datasets and mode..exit')
+            sys.exit();
+
     def _dfToFile(self, df, filename):
         list_df = [df[i:i + 10000] for i in range(0, df.shape[0], 10000)]
         list_df[0].to_csv(filename, index=False, line_terminator='\n')

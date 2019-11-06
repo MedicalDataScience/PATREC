@@ -111,8 +111,9 @@ class NeuralNetDatasetHandler:
 
     def _dataset_reader(self):
         if self.balanced_datasets:
-            filename_dataset = self._getFilenameDatasetBalanced();
+            filename_dataset = self._getFilenameDatasetBalanced()
             # shuffle is only performed for training; not optimal --> maybe five another flag to specify training/eval
+            print('read: ' + str(filename_dataset))
             dataset = tf.data.TextLineDataset(filename_dataset)
             dataset = dataset.skip(1)
             if self.mode == 'train':
@@ -194,6 +195,10 @@ class NeuralNetDatasetHandler:
             dataset = dataset.shuffle(buffer_size=self.dataset.getNumSamples())
         dataset = dataset.map(self._parse_csv_encode_maindiag, num_parallel_calls=5)
         return dataset;
+
+
+    def update_model_dir(self, dir_model):
+        self.dir_model = dir_model;
 
 
     def readDatasetTF(self):

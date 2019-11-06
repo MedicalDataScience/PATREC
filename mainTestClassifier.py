@@ -13,44 +13,30 @@ from learning.ClassifierLogisticRegression import OptionsLogisticRegression
 import helpers.constants as constantsPATREC
 
 if __name__ == '__main__':
-    dirProject = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/';
-    dirData = dirProject + 'data/';
-    dirResultsBase = dirProject + 'results/';
-    dirModelsBase = dirProject + 'classifiers/'
+    dirProject = '/home/thomas/fusessh/scicore/projects/patrec'
+    dirData = os.path.join(dirProject, 'data');
+    dirResultsBase = os.path.join(dirProject, 'results');
+    dirModelsBase = os.path.join(dirProject, 'classifiers')
 
     dict_options_dataset_training = {
         'dir_data':                 dirData,
         'data_prefix':              'patrec',
         'dataset':                  '20122015',
-        'subgroups':                ['DK'],
         'encoding':                 'categorical',
-<<<<<<< Updated upstream
-        'newfeatures':              None,
-        'featurereduction':         {'method': 'FUSION'},
-        'grouping':                 'verylightgrouping'
-=======
         'newfeatures':              {'names': constantsPATREC.NEW_FEATURES},
         'featurereduction':         None,
         'grouping':                 'verylightgrouping',
-        'filtering':                'chronic_lung'
->>>>>>> Stashed changes
+        'filtering':                'EntlassBereich_Gyn'
     }
     dict_options_dataset_testing = {
         'dir_data':                 dirData,
         'data_prefix':              'patrec',
         'dataset':                  '20162017',
-        'subgroups':                ['DK'],
         'encoding':                 'categorical',
-<<<<<<< Updated upstream
-        'newfeatures':              None,
-        'featurereduction':         {'method': 'FUSION'},
-        'grouping':                 'verylightgrouping'
-=======
         'newfeatures':              {'names': constantsPATREC.NEW_FEATURES},
         'featurereduction':         None,
         'grouping':                 'verylightgrouping',
-        'filtering':                'chronic_lung'
->>>>>>> Stashed changes
+        'filtering':                'EntlassBereich_Gyn'
     }
 
     options_training = DatasetOptions(dict_options_dataset_training);
@@ -60,11 +46,7 @@ if __name__ == '__main__':
     options_rf = OptionsRF(dirModelsBase, options_training.getFilenameOptions(filteroptions=True), options_clf=dict_opt_rf);
     clf_rf = ClassifierRF(options_rf);
 
-<<<<<<< Updated upstream
-    dict_opt_lr = {'penalty': 'l1', 'C': 0.075};
-=======
     dict_opt_lr = {'penalty': 'l1', 'C': 0.5};
->>>>>>> Stashed changes
     options_lr = OptionsLogisticRegression(dirModelsBase, options_training.getFilenameOptions(filteroptions=True), options_clf=dict_opt_lr);
     clf_lr = ClassifierLogisticRegression(options_lr);
 

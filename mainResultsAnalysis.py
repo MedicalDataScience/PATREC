@@ -4,9 +4,11 @@ from utils.DatasetOptions import DatasetOptions
 from utils.Dataset import Dataset
 from utils.Results import Results
 
+from learning.ClassifierRF import ClassifierRF
 from learning.ClassifierRF import OptionsRF
 from learning.ClassifierLogisticRegression import ClassifierLogisticRegression
 from learning.ClassifierLogisticRegression import OptionsLogisticRegression
+from learning.ClassifierNN import ClassifierNN
 from learning.ClassifierNN import OptionsNN
 from learning.ClassifierSGD import OptionsSGD
 from analyzing.ResultsAnalyzer import ResultsSingleConfigAnalyzer;
@@ -196,21 +198,45 @@ def plotDifferentTrainingSetSingleTestSetNZ(results_analyzer, dirData, dirModels
 
 
 def plotDifferentClassifiers(results_analyzer, dirData, dirModelsBase, dirResultsBase):
-    data_prefix = 'patrec'
+    dict_opt_lr = {'penalty': 'l1', 'C': 0.5};
+    dict_opt_rf = {'n_estimators': 500, 'max_depth': 50};
+    dict_options_nn = {
+        'hidden_units': [60, 40, 40, 20],
+        'learningrate': 0.001,
+        'dropout': 0.5,
+        'batchnorm': True,
+        'batch_size': 64,
+        'training_epochs': 1000,
+        'pretrained': None,
+    }
+    DIRPROJECT = '/home/thomas/projects/patrec';
+    model_dir = os.path.join(DIRPROJECT, "patients_model")
 
-    # compare different subsets of data: EntlassBereich (only with RandomForest)
     dict_options_dataset_training = {
-        'dir_data':             dirData,
-        'data_prefix':          data_prefix,
-        'dataset':              '20122015',
-        'options_filtering':    None
+        'dir_data':         dirData,
+        'data_prefix':      'patrec',
+        'dataset':          '20122015',
+        'grouping':         'verylightgrouping',
+        'encoding':         'categorical',
+        'newfeatures':      {'names': constantsPATREC.NEW_FEATURES},
+        'featurereduction': None,
+        'filtering':        None,
+        'balanced':         False,
+        'resample':         False
     }
     dict_options_dataset_testing = {
-        'dir_data':             dirData,
-        'data_prefix':          data_prefix,
-        'dataset':              '20162017',
-        'options_filtering':    None
+        'dir_data':         dirData,
+        'data_prefix':      'patrec',
+        'dataset':          '20162017',
+        'grouping':         'verylightgrouping',
+        'encoding':         'categorical',
+        'newfeatures':      {'names': constantsPATREC.NEW_FEATURES},
+        'featurereduction': None,
+        'filtering':        None,
+        'balanced':         False,
+        'resample':         False
     }
+
     options_training = DatasetOptions(dict_options_dataset_training);
     options_testing = DatasetOptions(dict_options_dataset_testing);
 
@@ -222,18 +248,47 @@ def plotDifferentClassifiers(results_analyzer, dirData, dirModelsBase, dirResult
     options_lr_l2 = OptionsLogisticRegression(dirModelsBase, options_training.getFilenameOptions(filteroptions=True), options_clf=dict_opt_lr_l2);
     results_test_lr_l2 = Results(dirResultsBase, options_training, options_lr_l2, 'test', options_testing);
 
-
     dict_opt_lr_l1 = {'penalty': 'l1', 'C': 0.5};
     options_lr_l1 = OptionsLogisticRegression(dirModelsBase, options_training.getFilenameOptions(filteroptions=True), options_clf=dict_opt_lr_l1);
     results_test_lr_l1 = Results(dirResultsBase, options_training, options_lr_l1, 'test', options_testing);
 
+    dict_options_dataset_training_nn = {
+        'dir_data':         dirData,
+        'data_prefix':      'patrec',
+        'dataset':          '20122015',
+        'grouping':         'verylightgrouping',
+        'encoding':         'embedding',
+        'newfeatures':      None,
+        'featurereduction': None,
+        'filtering':        None,
+        'balanced':         False,
+        'resample':         False
+    }
+    dict_options_dataset_testing_nn = {
+        'dir_data':         dirData,
+        'data_prefix':      'patrec',
+        'dataset':          '20162017',
+        'grouping':         'verylightgrouping',
+        'encoding':         'embedding',
+        'newfeatures':      None,
+        'featurereduction': None,
+        'filtering':        None,
+        'balanced':         False,
+        'resample':         False
+    }
+    options_training = DatasetOptions(dict_options_dataset_training_nn);
+    options_testing = DatasetOptions(dict_options_dataset_testing_nn);
+    options_nn = OptionsNN(model_dir, options_training, options_clf=dict_options_nn);
+    results_test_nn = Results(dirResultsBase, options_training, options_nn, 'test', options_testing);
+
     analyzer_rf = ResultsSingleConfigAnalyzer(results_test_rf, 10);
     analyzer_lr_l1 = ResultsSingleConfigAnalyzer(results_test_lr_l1, 10);
-    analyzer_lr_l2 = ResultsSingleConfigAnalyzer(results_test_lr_l2, 10);
-    analyzer = [analyzer_rf, analyzer_lr_l1, analyzer_lr_l2];
-    names = ['rf', 'logistic regression (l1)', 'logistic regression (l2)']
-    title_plot = 'multiple classifiers: trained on patrec 2012-2015, tested on patrec 2016-2017'
-    filename_plot = dirPlotsBase + 'different_classifiers_train_patrec_20122015_test_patrec_20162017.png'
+    analyzer_nn = ResultsSingleConfigAnalyzer(results_test_nn, 10)
+    analyzer = [analyzer_rf, analyzer_lr_l1, analyzer_nn];
+    names = ['RF', 'Logistic Regression (l1)', 'Neural Network']
+    title_plot = ''
+    filename_plot = os.path.join(dirPlotsBase,
+                                 'different_classifiers_train_patrec_20122015_test_patrec_20162017.png')
     results_analyzer.plotROCcurveMulitpleConfigs(analyzer, names, f_plot=filename_plot, titlePlot=title_plot, )
 
 
@@ -351,17 +406,234 @@ def plotNNPerformance(results_analyzer, dirData, dirModelsBase, dirResultsBase):
     results_analyzer.plotROCcurveMulitpleConfigs(analyzer, names, f_plot=filename_plot)
 
 
-def plotDiseasePerformances(results_analyzer, dirData, dirModelsBase, dirResultsBase):
+def plotOEPerformances(results_analyzer, dirData, dirModelsBase, dirResultsBase):
     dict_opt_lr = {'penalty': 'l1', 'C': 0.5};
     dict_opt_rf = {'n_estimators': 500, 'max_depth': 50};
+    dict_options_nn = {
+        'hidden_units':     [60, 40, 40, 20],
+        'learningrate':     0.001,
+        'dropout':          0.5,
+        'batchnorm':        True,
+        'batch_size':       64,
+        'training_epochs':  1000,
+        'pretrained':       None,
+    }
+    DIRPROJECT = '/home/thomas/projects/patrec';
+    model_dir = os.path.join(DIRPROJECT, "patients_model")
+
     dict_options_dataset_training = {
         'dir_data':         dirData,
         'data_prefix':      'patrec',
         'dataset':          '20122015',
+        'grouping':         'verylightgrouping',
+        'encoding':         'embedding',
+        'newfeatures':      None,
+        'featurereduction': None,
+        'filtering':        None,
+        'balanced':         False,
+        'resample':         False
+    }
+    dict_options_dataset_testing = {
+        'dir_data':         dirData,
+        'data_prefix':      'patrec',
+        'dataset':          '20162017',
+        'grouping':         'verylightgrouping',
+        'encoding':         'embedding',
+        'newfeatures':      None,
+        'featurereduction': None,
+        'filtering':        None,
+        'balanced':         False,
+        'resample':         False
+    }
+    dataset_options_training_all = DatasetOptions(dict_options_dataset_training);
+    dataset_options_testing_all = DatasetOptions(dict_options_dataset_testing);
+    options_all_nn = OptionsNN(model_dir, dataset_options_training_all, options_clf=dict_options_nn);
+    options_all_lr = OptionsLogisticRegression(dirModelsBase,
+                                                dataset_options_training_all.getFilenameOptions(filteroptions=True),
+                                                options_clf=dict_opt_lr)
+    options_all_rf = OptionsRF(dirModelsBase, dataset_options_training_all.getFilenameOptions(filteroptions=True),
+                               options_clf=dict_opt_rf);
+    classifier_nn_all = ClassifierNN(options_all_nn)
+    classifier_lr_all = ClassifierLogisticRegression(options_all_lr)
+    classifier_rf_all = ClassifierRF(options_all_rf)
+
+    dict_options_dataset_training = {
+        'dir_data':         dirData,
+        'data_prefix':      'patrec',
+        'dataset':          '20122015',
+        'grouping':         'verylightgrouping',
+        'encoding':         'embedding',
+        'newfeatures':      None,
+        'featurereduction': None,
+        'filtering':        'EntlassBereich_SaO',
+        'balanced':         False,
+        'resample':         False
+    }
+    dict_options_dataset_testing = {
+        'dir_data':         dirData,
+        'data_prefix':      'patrec',
+        'dataset':          '20162017',
+        'grouping':         'verylightgrouping',
+        'encoding':         'embedding',
+        'newfeatures':      None,
+        'featurereduction': None,
+        'filtering':        'EntlassBereich_SaO',
+        'balanced':         False,
+        'resample':         False
+    }
+    dataset_options_training_SaO = DatasetOptions(dict_options_dataset_training);
+    dataset_options_testing_SaO = DatasetOptions(dict_options_dataset_testing);
+    options_SaO_nn = OptionsNN(model_dir, dataset_options_training_SaO, options_clf=dict_options_nn);
+    options_SaO_lr = OptionsLogisticRegression(dirModelsBase,
+                                               dataset_options_training_SaO.getFilenameOptions(filteroptions=True),
+                                               options_clf=dict_opt_lr);
+    options_SaO_rf = OptionsRF(dirModelsBase,
+                               dataset_options_training_SaO.getFilenameOptions(filteroptions=True),
+                               options_clf=dict_opt_rf)
+    classifier_nn_SaO = ClassifierNN(options_SaO_nn);
+    classifier_lr_SaO = ClassifierLogisticRegression(options_SaO_lr);
+    classifier_rf_SaO = ClassifierRF(options_SaO_rf);
+
+    dict_options_dataset_training = {
+        'dir_data':         dirData,
+        'data_prefix':      'patrec',
+        'dataset':          '20122015',
+        'grouping':         'verylightgrouping',
+        'encoding':         'embedding',
+        'newfeatures':      None,
+        'featurereduction': None,
+        'filtering':        'EntlassBereich_Med',
+        'balanced':         False,
+        'resample':         False
+    }
+    dict_options_dataset_testing = {
+        'dir_data':         dirData,
+        'data_prefix':      'patrec',
+        'dataset':          '20162017',
+        'grouping':         'verylightgrouping',
+        'encoding':         'embedding',
+        'newfeatures':      None,
+        'featurereduction': None,
+        'filtering':        'EntlassBereich_Med',
+        'balanced':         False,
+        'resample':         False
+    }
+    dataset_options_training_Med = DatasetOptions(dict_options_dataset_training);
+    dataset_options_testing_Med = DatasetOptions(dict_options_dataset_testing);
+    options_Med_nn = OptionsNN(model_dir, dataset_options_training_Med, options_clf=dict_options_nn);
+    options_Med_lr = OptionsLogisticRegression(dirModelsBase,
+                                               dataset_options_training_Med.getFilenameOptions(filteroptions=True),
+                                               options_clf=dict_opt_lr);
+    options_Med_rf = OptionsRF(dirModelsBase, dataset_options_training_Med.getFilenameOptions(filteroptions=True),
+                               options_clf=dict_opt_rf)
+    classifier_nn_Med = ClassifierNN(options_Med_nn)
+    classifier_lr_Med = ClassifierLogisticRegression(options_Med_lr);
+    classifier_rf_Med = ClassifierRF(options_Med_rf);
+
+    dict_options_dataset_training = {
+        'dir_data':         dirData,
+        'data_prefix':      'patrec',
+        'dataset':          '20122015',
+        'grouping':         'verylightgrouping',
+        'encoding':         'embedding',
+        'newfeatures':      None,
+        'featurereduction': None,
+        'filtering':        'EntlassBereich_Gyn',
+        'balanced':         False,
+        'resample':         False
+    }
+    dict_options_dataset_testing = {
+        'dir_data':         dirData,
+        'data_prefix':      'patrec',
+        'dataset':          '20162017',
+        'grouping':         'verylightgrouping',
+        'encoding':         'embedding',
+        'newfeatures':      None,
+        'featurereduction': None,
+        'filtering':        'EntlassBereich_Gyn',
+        'balanced':         False,
+        'resample':         False
+    }
+    dataset_options_training_Gyn = DatasetOptions(dict_options_dataset_training);
+    dataset_options_testing_Gyn = DatasetOptions(dict_options_dataset_testing);
+    options_Gyn_nn = OptionsNN(model_dir, dataset_options_training_Gyn, options_clf=dict_options_nn);
+    options_Gyn_lr = OptionsLogisticRegression(dirModelsBase,
+                                               dataset_options_training_Gyn.getFilenameOptions(filteroptions=True),
+                                               options_clf=dict_opt_lr);
+    options_Gyn_rf = OptionsRF(dirModelsBase, dataset_options_training_Gyn.getFilenameOptions(filteroptions=True),
+                               options_clf=dict_opt_rf);
+    classifier_nn_Gyn = ClassifierNN(options_Gyn_nn)
+    classifier_lr_Gyn = ClassifierLogisticRegression(options_Gyn_lr)
+    classifier_rf_Gyn = ClassifierRF(options_Gyn_rf)
+
+    results_all_nn = Results(dirResultsBase, dataset_options_training_all, options_all_nn, 'test', dataset_options_testing_all);
+    results_SaO_nn = Results(dirResultsBase, dataset_options_training_SaO, options_SaO_nn, 'test', dataset_options_testing_SaO);
+    results_Med_nn = Results(dirResultsBase, dataset_options_training_Med, options_Med_nn, 'test', dataset_options_testing_Med);
+    results_Gyn_nn = Results(dirResultsBase, dataset_options_training_Gyn, options_Gyn_nn, 'test', dataset_options_testing_Gyn);
+    results_all_lr = Results(dirResultsBase, dataset_options_training_all, options_all_lr, 'test', dataset_options_testing_all);
+    results_SaO_lr = Results(dirResultsBase, dataset_options_training_SaO, options_SaO_lr, 'test', dataset_options_testing_SaO);
+    results_Med_lr = Results(dirResultsBase, dataset_options_training_Med, options_Med_lr, 'test', dataset_options_testing_Med);
+    results_Gyn_lr = Results(dirResultsBase, dataset_options_training_Gyn, options_Gyn_lr, 'test', dataset_options_testing_Gyn);
+    results_all_rf = Results(dirResultsBase, dataset_options_training_all, options_all_rf, 'test', dataset_options_testing_all);
+    results_SaO_rf = Results(dirResultsBase, dataset_options_training_SaO, options_SaO_rf, 'test', dataset_options_testing_SaO);
+    results_Med_rf = Results(dirResultsBase, dataset_options_training_Med, options_Med_rf, 'test', dataset_options_testing_Med);
+    results_Gyn_rf = Results(dirResultsBase, dataset_options_training_Gyn, options_Gyn_rf, 'test', dataset_options_testing_Gyn);
+
+    analyzer_all_nn = ResultsSingleConfigAnalyzer(results_all_nn, 10);
+    analyzer_SaO_nn = ResultsSingleConfigAnalyzer(results_SaO_nn, 10);
+    analyzer_Med_nn = ResultsSingleConfigAnalyzer(results_Med_nn, 10);
+    analyzer_Gyn_nn = ResultsSingleConfigAnalyzer(results_Gyn_nn, 10);
+    analyzer_all_lr = ResultsSingleConfigAnalyzer(results_all_lr, 10);
+    analyzer_SaO_lr = ResultsSingleConfigAnalyzer(results_SaO_lr, 10);
+    analyzer_Med_lr = ResultsSingleConfigAnalyzer(results_Med_lr, 10);
+    analyzer_Gyn_lr = ResultsSingleConfigAnalyzer(results_Gyn_lr, 10);
+    analyzer_all_rf = ResultsSingleConfigAnalyzer(results_all_rf, 10);
+    analyzer_SaO_rf = ResultsSingleConfigAnalyzer(results_SaO_rf, 10);
+    analyzer_Med_rf = ResultsSingleConfigAnalyzer(results_Med_rf, 10);
+    analyzer_Gyn_rf = ResultsSingleConfigAnalyzer(results_Gyn_rf, 10);
+
+    analyzer_nn = [analyzer_all_nn, analyzer_Med_nn, analyzer_SaO_nn, analyzer_Gyn_nn];
+    analyzer_lr = [analyzer_all_lr, analyzer_Med_lr, analyzer_SaO_lr, analyzer_Gyn_lr];
+    analyzer_rf = [analyzer_all_rf, analyzer_Med_rf, analyzer_SaO_rf, analyzer_Gyn_rf];
+    analyzer = analyzer_nn;
+    names_nn = ['NN - all', 'NN - Med', 'NN - SaO', 'NN - Gyn']
+    names_lr = ['LR - all', 'LR - Med', 'LR - SaO', 'LR - Gyn']
+    names_rf = ['RF - all', 'RF - Med', 'RF - SaO', 'RF - Gyn']
+    names = names_nn;
+    title_plot = ''
+    filename_plot_nn = os.path.join(dirPlotsBase, 'oes_nn_classification_performance.png')
+    filename_plot_lr = os.path.join(dirPlotsBase, 'oes_lr_classification_performance.png')
+    filename_plot_rf = os.path.join(dirPlotsBase, 'oes_rf_classification_performance.png')
+    filename_plot = filename_plot_nn;
+    results_analyzer.plotROCcurveMulitpleConfigs(analyzer, names, titlePlot=title_plot, f_plot=filename_plot)
+
+
+def plotDiseasePerformances(results_analyzer, dirData, dirModelsBase, dirResultsBase):
+    dict_opt_lr = {'penalty': 'l1', 'C': 0.5};
+    dict_opt_rf = {'n_estimators': 500, 'max_depth': 50};
+    dict_options_nn = {
+        'hidden_units': [60, 40, 40, 20],
+        'learningrate': 0.001,
+        'dropout': 0.5,
+        'batchnorm': True,
+        'batch_size': 64,
+        'training_epochs': 1000,
+        'pretrained': None,
+    }
+    DIRPROJECT = '/home/thomas/projects/patrec';
+    model_dir = os.path.join(DIRPROJECT, "patients_model")
+
+    dict_options_dataset_training = {
+        'dir_data':         dirData,
+        'data_prefix':      'patrec',
+        'dataset':          '20122015',
+        'grouping':         'verylightgrouping',
         'encoding':         'categorical',
         'newfeatures':      {'names': constantsPATREC.NEW_FEATURES},
         'featurereduction': None,
-        'grouping':         'verylightgrouping'
+        'filtering':        None,
+        'balanced':         False,
+        'resample':         False
     }
     dict_options_dataset_testing = {
         'dir_data':         dirData,
@@ -369,8 +641,11 @@ def plotDiseasePerformances(results_analyzer, dirData, dirModelsBase, dirResults
         'dataset':          '20162017',
         'encoding':         'categorical',
         'newfeatures':      {'names': constantsPATREC.NEW_FEATURES},
+        'grouping':         'verylightgrouping',
         'featurereduction': None,
-        'grouping':         'verylightgrouping'
+        'filtering':        None,
+        'balanced':         False,
+        'resample':         False
     }
 
     dict_options_all_training = dict_options_dataset_training.copy();
@@ -383,6 +658,7 @@ def plotDiseasePerformances(results_analyzer, dirData, dirModelsBase, dirResults
     options_all_rf = OptionsRF(dirModelsBase,
                                options_all_training.getFilenameOptions(filteroptions=True),
                                options_clf=dict_opt_rf);
+    options_all_nn = OptionsNN(model_dir, options_all_training, options_clf=dict_options_nn);
 
 
     dict_options_lung_training = dict_options_dataset_training.copy();
@@ -397,6 +673,7 @@ def plotDiseasePerformances(results_analyzer, dirData, dirModelsBase, dirResults
     options_lung_rf = OptionsRF(dirModelsBase,
                                 options_lung_training.getFilenameOptions(filteroptions=True),
                                 options_clf=dict_opt_rf);
+    options_lung_nn = OptionsNN(model_dir, options_lung_training, options_clf=dict_options_nn);
 
     dict_options_oncology_training = dict_options_dataset_training.copy();
     dict_options_oncology_testing = dict_options_dataset_testing.copy();
@@ -410,6 +687,7 @@ def plotDiseasePerformances(results_analyzer, dirData, dirModelsBase, dirResults
     options_oncology_rf = OptionsRF(dirModelsBase,
                                     options_oncology_training.getFilenameOptions(filteroptions=True),
                                     options_clf=dict_opt_rf);
+    options_oncology_nn = OptionsNN(model_dir, options_oncology_training, options_clf=dict_options_nn);
 
     dict_options_cardio_training = dict_options_dataset_training.copy();
     dict_options_cardio_testing = dict_options_dataset_testing.copy();
@@ -423,7 +701,7 @@ def plotDiseasePerformances(results_analyzer, dirData, dirModelsBase, dirResults
     options_cardio_rf = OptionsRF(dirModelsBase,
                                   options_cardio_training.getFilenameOptions(filteroptions=True),
                                   options_clf=dict_opt_rf);
-
+    options_cardio_nn = OptionsNN(model_dir, options_cardio_training, options_clf=dict_options_nn);
 
     results_all_rf = Results(dirResultsBase, options_all_training, options_all_rf, 'test', options_all_testing);
     results_lung_rf = Results(dirResultsBase, options_lung_training, options_lung_rf, 'test', options_lung_testing);
@@ -432,8 +710,11 @@ def plotDiseasePerformances(results_analyzer, dirData, dirModelsBase, dirResults
     results_all_lr = Results(dirResultsBase, options_all_training, options_all_lr, 'test', options_all_testing);
     results_lung_lr = Results(dirResultsBase, options_lung_training, options_lung_lr, 'test', options_lung_testing);
     results_oncology_lr = Results(dirResultsBase, options_oncology_training, options_oncology_lr, 'test', options_oncology_testing);
-    results_cardio_lr = Results(dirResultsBase, options_cardio_training, options_cardio_lr, 'test',
-                                options_cardio_testing);
+    results_cardio_lr = Results(dirResultsBase, options_cardio_training, options_cardio_lr, 'test', options_cardio_testing);
+    results_all_nn = Results(dirResultsBase, options_all_training, options_all_nn, 'test', options_all_testing);
+    results_lung_nn = Results(dirResultsBase, options_lung_training, options_lung_nn, 'test', options_lung_testing);
+    results_oncology_nn = Results(dirResultsBase, options_oncology_training, options_oncology_nn, 'test', options_oncology_testing);
+    results_cardio_nn = Results(dirResultsBase, options_cardio_training, options_cardio_nn, 'test', options_cardio_testing);
 
     analyzer_all_rf = ResultsSingleConfigAnalyzer(results_all_rf, 10);
     analyzer_lung_rf = ResultsSingleConfigAnalyzer(results_lung_rf, 10);
@@ -443,18 +724,27 @@ def plotDiseasePerformances(results_analyzer, dirData, dirModelsBase, dirResults
     analyzer_lung_lr = ResultsSingleConfigAnalyzer(results_lung_lr, 10);
     analyzer_oncology_lr = ResultsSingleConfigAnalyzer(results_oncology_lr, 10);
     analyzer_cardio_lr = ResultsSingleConfigAnalyzer(results_cardio_lr, 10);
-    # analyzer = [analyzer_all_rf, analyzer_all_lr, analyzer_lung_rf, analyzer_lung_lr,
-    #             analyzer_oncology_rf, analyzer_oncology_lr, analyzer_cardio_rf, analyzer_cardio_lr];
-    analyzer = [analyzer_all_rf, analyzer_lung_rf, analyzer_oncology_rf, analyzer_cardio_rf]
+    analyzer_all_nn = ResultsSingleConfigAnalyzer(results_all_nn, 10);
+    analyzer_lung_nn = ResultsSingleConfigAnalyzer(results_lung_nn, 10);
+    analyzer_oncology_nn = ResultsSingleConfigAnalyzer(results_oncology_nn,  10);
+    analyzer_cardio_nn = ResultsSingleConfigAnalyzer(results_cardio_nn, 10);
+    analyzer_rf = [analyzer_all_rf, analyzer_lung_rf, analyzer_oncology_rf, analyzer_cardio_rf];
+    analyzer_lr = [analyzer_all_lr, analyzer_lung_lr, analyzer_oncology_lr, analyzer_cardio_lr];
+    analyzer_nn = [analyzer_all_nn, analyzer_lung_nn, analyzer_oncology_nn, analyzer_cardio_nn]
+    analyzer = analyzer_lr;
 
-    # names = ['rf - all', 'lr - all', 'rf - chronic lung', 'lr - chronic lung',
-    #          'rf - oncology', 'lr - oncology', 'rf - cardiovascular', 'lr - cardiovascular']
-    names = ['RF - all', 'RF - chronic lung', 'RF - oncology', 'RF - cardiovascular']
+    names_rf = ['RF - all', 'RF - chronic lung', 'RF - oncology', 'RF - cardiovascular'];
+    names_lr = ['LR - all', 'LR - chronic lung', 'LR - oncology', 'LR - cardiovascular'];
+    names_nn = ['NN - all', 'NN - chronic lung', 'NN - oncology', 'NN - cardiovascular'];
+    names = names_lr;
 
-    # title_plot = 'performance for different diseases: Random Forest and Lasso Logistic Regression'
     title_plot = ''
-    filename_plot = dirPlotsBase + 'diseases_rf_classification_performance.png'
+    filename_plot_rf = os.path.join(dirPlotsBase, 'diseases_rf_classification_performance.png');
+    filename_plot_lr = os.path.join(dirPlotsBase, 'diseases_lr_classification_performance.png');
+    filename_plot_nn = os.path.join(dirPlotsBase, 'diseases_nn_classification_performance.png');
+    filename_plot = filename_plot_lr;
     results_analyzer.plotROCcurveMulitpleConfigs(analyzer, names, titlePlot=title_plot, f_plot=filename_plot)
+
 
 def plotSGDClassifierPerformance(results_analyzer, dirData, dirModelsBase, dirResultsBase):
 
@@ -518,11 +808,12 @@ def plotSingleConfiguration(results_analyzer, dirData, dirModelsBase, dirResults
 
 
 if __name__ == '__main__':
-    dirProject = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/';
-    dirData = dirProject + 'data/';
-    dirResultsBase = dirProject + 'results/';
-    dirModelsBase = dirProject + 'classifiers/'
-    dirPlotsBase = dirProject + 'plots/performance_measures/';
+    # dirProject = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/';
+    dirProject = '/home/thomas/fusessh/scicore/projects/patrec';
+    dirData = os.path.join(dirProject,'data/');
+    dirResultsBase = os.path.join(dirProject, 'results/');
+    dirModelsBase = os.path.join(dirProject, 'classifiers/');
+    dirPlotsBase = os.path.join(dirProject, 'plots', 'performance_measures');
 
     if not os.path.exists(dirPlotsBase):
         os.makedirs(dirPlotsBase);
@@ -532,9 +823,12 @@ if __name__ == '__main__':
     # plotSingleConfiguration(results_analyzer, dirData, dirModelsBase, dirResultsBase);
     # plotOneTrainingSetDifferentTestSets(results_analyzer, dirData, dirModelsBase, dirResultsBase);
     # plotDifferentTrainingSetDifferentTestSets(results_analyzer, dirData, dirModelsBase, dirResultsBase)
-    # plotDifferentClassifiers(results_analyzer, dirData, dirModelsBase, dirResultsBase)
     # plotDifferentTrainingSetSingleTestSetNZ(results_analyzer, dirData, dirModelsBase, dirResultsBase)
 
 
     # plotNNPerformance(results_analyzer, dirData, dirModelsBase, dirResultsBase);
-    plotSGDClassifierPerformance(results_analyzer, dirData, dirModelsBase, dirResultsBase);
+    # plotSGDClassifierPerformance(results_analyzer, dirData, dirModelsBase, dirResultsBase);
+
+    plotDifferentClassifiers(results_analyzer, dirData, dirModelsBase, dirResultsBase)
+    plotDiseasePerformances(results_analyzer, dirData, dirModelsBase, dirResultsBase);
+    plotOEPerformances(results_analyzer, dirData, dirModelsBase, dirResultsBase);

@@ -15,7 +15,7 @@ import helpers.constants as constantsPATREC
 
 if __name__ == '__main__':
     # dirProject = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/';
-    dirProject = '/home/thomas/fusessh/scicore/projects/patrec/projects/PATREC'
+    dirProject = '/home/thomas/fusessh/scicore/projects/patrec'
     dirData = os.path.join(dirProject, 'data');
     dirResultsBase = os.path.join(dirProject, 'results');
     dirModelsBase = os.path.join(dirProject, 'classifiers')
@@ -28,7 +28,7 @@ if __name__ == '__main__':
     'encoding':                 'categorical',
     'newfeatures':              {'names': constantsPATREC.NEW_FEATURES},
     'featurereduction':         None,
-    'filtering':                'EntlassBereich_Med'
+    'filtering':                'EntlassBereich_Gyn'
 }
 
     options_training = DatasetOptions(dict_options_dataset_training);
@@ -37,7 +37,7 @@ if __name__ == '__main__':
 
     print('dataset filename: ' + str(dataset_training.getFilename()))
 
-    dict_opt_rf = {'n_estimators': 500, 'max_depth': 15};
+    dict_opt_rf = {'n_estimators': 500, 'max_depth': 50};
     options_rf = OptionsRF(dirModelsBase, options_training.getFilenameOptions(filteroptions=True), options_clf=dict_opt_rf);
     clf_rf = ClassifierRF(options_rf);
 

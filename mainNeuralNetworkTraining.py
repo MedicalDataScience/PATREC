@@ -31,7 +31,8 @@ print(tf_base_dir)
 if not tf_base_dir in sys.path:
     sys.path.append(tf_base_dir);
 
-DIRPROJECT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# DIRPROJECT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DIRPROJECT = '/home/thomas/projects/patrec';
 # DIRPROJECT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/';
 # DIRPROJECT = DIRPROJECT.replace("\\", "/")
 
@@ -77,7 +78,7 @@ def define_flags():
                             batch_size=64,
                             learningrate=0.001)
 
-    flags.DEFINE_bool('enable_dp', True, 'Enable Differential Privacy')
+    flags.DEFINE_bool('enable_dp', False, 'Enable Differential Privacy')
     flags.DEFINE_float('dp_eps', 10, 'Differential Privacy Epsilon')
     flags.DEFINE_float('dp_delta', 1e-5, 'Differential Privacy Delta')
     flags.DEFINE_float('dp_sigma', 0.5, 'Differential Privacy Noise Amount')
@@ -92,8 +93,8 @@ def run_deep(flags_obj):
     flags_obj: An object containing parsed flag values.
     """
 
-    # dirProject = '/home/thomas/fusessh/scicore/projects/patrec/projects/PATREC'
-    dirProject = "Z:\\projects\\PATREC"
+    dirProject = '/home/thomas/fusessh/scicore/projects/patrec'
+    # dirProject = "Z:\\projects\\PATREC"
     dirData = os.path.join(dirProject, 'data');
     dict_options_dataset_training = {
         'dir_data':         dirData,
@@ -103,7 +104,7 @@ def run_deep(flags_obj):
         'encoding':         'embedding',
         'newfeatures':      None,
         'featurereduction': None,
-        'filtering':        None,
+        'filtering':        'oncology',
         'balanced':         False,
         'resample':         True
     }
@@ -113,11 +114,11 @@ def run_deep(flags_obj):
 
 
     if dict_options_dataset_training['data_prefix'] == 'nz':
-        feature_columns_nz_fusion = FeatureColumnsNZ(dataset_options=dataset_options_train);
-        feature_columns = feature_columns_nz_fusion;
+        feature_columns_nz = FeatureColumnsNZ(dataset_options=dataset_options_train);
+        feature_columns = feature_columns_nz;
     elif dict_options_dataset_training['data_prefix'] == 'patrec':
-        feature_columns_patrec_fusion = FeatureColumnsPatrec(dataset_options=dataset_options_train);
-        feature_columns = feature_columns_patrec_fusion;
+        feature_columns_patrec = FeatureColumnsPatrec(dataset_options=dataset_options_train);
+        feature_columns = feature_columns_patrec;
     else:
         print('unknown data prefix..exit')
         sys.exit()
