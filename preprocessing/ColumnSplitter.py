@@ -110,7 +110,7 @@ class ColumnSplitter:
     def splitColumnsAllSubgroups(self):
         dir_data = self.options.getDirData();
         dataset = self.options.getDatasetName();
-        for g in self.options.getSubGroups():
+        for g in self.options.getSubgroups():
             filename_out = dir_data + 'data_' + dataset + '_' + g + '.csv';
             self.splitColumns(g, filename_out);
         filename_out_rest = dir_data + 'data_' + dataset + '_REST.csv';
