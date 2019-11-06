@@ -1,3 +1,4 @@
+import os
 import sys
 
 import pandas as pd
@@ -163,7 +164,7 @@ class DataCleaner:
         dir_data = self.options.getDirData();
         data_prefix = self.options.getDataPrefix();
         dataset = self.options.getDatasetName();
-        chunksize = self.options.getChunksize();
+        chunksize = self.options.getChunkSize();
         subgroups = self.options.getSubgroups();
         if self.filename_options_in is not None:
             strFilenameIn = dataset + '_REST' + '_' + self.filename_options_in;
@@ -174,8 +175,8 @@ class DataCleaner:
         else:
             strFilenameOut = strFilenameIn + '_' + self.filename_options_out;
 
-        filename_data_in = dir_data + data_prefix + '_' + strFilenameIn + '.csv';
-        filename_data_out_clean = dir_data + data_prefix + '_' + strFilenameOut + '.csv';
+        filename_data_in = os.path.join(dir_data, data_prefix + '_' + strFilenameIn + '.csv');
+        filename_data_out_clean = os.path.join(dir_data, data_prefix + '_' + strFilenameOut + '.csv');
         print(filename_data_in)
 
         data_df = pd.read_csv(filename_data_in);

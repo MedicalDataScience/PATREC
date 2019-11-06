@@ -96,7 +96,7 @@ class ColumnSplitter:
         print('headers_data_in_values.index(Fall): ' + str(self.headers_all_columns.index('Fall')))
         print('len(headers_subgroup_indices): ' + str(len(headers_subgroup_indices)))
 
-        chunksize = self.options.getChunksize();
+        chunksize = self.options.getChunkSize();
         filename_data_src = self.options.getFilenameRawData();
         readmission_data_reader = pd.read_csv(filename_data_src, usecols=headers_subgroup_indices, chunksize=chunksize);
         for k, chunk in enumerate(readmission_data_reader):
