@@ -136,8 +136,8 @@ class FeatureEncoder:
         print('encode features: ' + str(encoding))
         strFilename_in = dataset + '_' + name_dem_features + '_' + self.filename_options_in;
         strFilename_out = strFilename_in + '_' + encoding;
-        filename_data_in = os.path.join(dir_data, 'data_' + data_prefix + '_' + strFilename_in + '.csv');
-        filename_data_out = os.path.join(dir_data, 'data_' + data_prefix + '_' + strFilename_out + '.csv');
+        filename_data_in = os.path.join(dir_data, data_prefix + '_' + strFilename_in + '.csv');
+        filename_data_out = os.path.join(dir_data, data_prefix + '_' + strFilename_out + '.csv');
 
         df = pd.read_csv(filename_data_in);
         df = self.__preprocessFeatureEncoding(df);

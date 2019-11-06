@@ -25,8 +25,8 @@ class FeatureSetCreator:
         featurereduction = self.options.getFeatureReductionSettings();
 
         if newfeatures is None and featurereduction is None:
-            filename_data_in = os.path.join(dir_data, 'data_' + data_prefix + '_' + dataset + '_' + name_dem_features + '_' + self.filename_options_in + '.csv');
-            filename_data_out = os.path.join(dir_data, 'data_' + data_prefix + '_' + dataset + '_' + name_dem_features + '_standard.csv');
+            filename_data_in = os.path.join(dir_data, data_prefix + '_' + dataset + '_' + name_dem_features + '_' + self.filename_options_in + '.csv');
+            filename_data_out = os.path.join(dir_data, data_prefix + '_' + dataset + '_' + name_dem_features + '_standard.csv');
             copy2(filename_data_in, filename_data_out);
         else:
             if newfeatures is not None:
