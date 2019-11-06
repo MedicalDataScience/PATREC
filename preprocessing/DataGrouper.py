@@ -80,8 +80,8 @@ class DataGrouper:
         chunksize = self.options.getChunkSize();
 
         [strFilenameIn, strFilenameOut] = self.__getFilenameStrOutSubgroup(strGroup);
-        filename_data_in = os.path.join(dir_data, 'data_' + data_prefix + '_' + strFilenameIn + '.csv');
-        filename_data_out = os.path.join(dir_data, 'data_' + data_prefix + '_' + strFilenameOut + '.csv');
+        filename_data_in = os.path.join(dir_data, data_prefix + '_' + strFilenameIn + '.csv');
+        filename_data_out = os.path.join(dir_data, data_prefix + '_' + strFilenameOut + '.csv');
         group_names = self.__getGroupNames(strGroup)
         print(group_names)
         print(len(group_names))
