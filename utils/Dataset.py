@@ -23,7 +23,7 @@ class Dataset:
         options_filtering = self.options.getOptionsFiltering();
         if options_filtering in diseases:
             self.df = filter.filterDataDisease()
-        elif options_filtering.split("_")[0] in self.options.getCategoricalFeatures():
+        elif options_filtering.split("_")[0] in self.options.getCategoricalFeatures() and not self.options.getEncodingScheme() == 'categorical':
             self.df = filter.filterCategoricalColumn(options_filtering)
         else:
             self.df = filter.filterDataBinaryColumns(options_filtering)
@@ -160,7 +160,6 @@ class Dataset:
 
 
     def getBalancedSubsetTrainingAndTesting(self):
-
         [df_pos, df_neg] = self._getBalancedSubset();
         ratio_training_samples = self.options.getRatioTrainingSamples();
         num_pos_samples = df_pos.shape[0];

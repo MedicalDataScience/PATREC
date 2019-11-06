@@ -104,7 +104,7 @@ def run_deep(flags_obj):
         'encoding':         'embedding',
         'newfeatures':      None,
         'featurereduction': None,
-        'filtering':        'EntlassBereich_Med',
+        'filtering':        'oncology',
         'balanced':         False,
         'resample':         True
     }

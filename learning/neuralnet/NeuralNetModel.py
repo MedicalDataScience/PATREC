@@ -69,8 +69,20 @@ class NeuralNetModel():
         if self.dataset_handler_train.dataset.options.options_filtering is not None:
             suffix_modeldir += '_filtering_' + str(self.dataset_handler_train.dataset.options.options_filtering)
 
-        model_dir = modeldir_base + '/' + suffix_modeldir;
+        model_dir = os.path.join(modeldir_base, suffix_modeldir);
         self.flags.model_dir = model_dir;
+        if self.mode == 'train':
+            if self.dataset_options_eval is not None:
+                self.dataset_handler_train.update_model_dir(self.flags.model_dir);
+                self.dataset_handler_eval.update_model_dir(self.flags.model_dir);
+            else:
+                self.dataset_handler_train.update_model_dir(self.flags.model_dir);
+                self.dataset_handler_eval.update_model_dir(self.flags.model_dir);
+        elif self.mode == 'test':
+            self.dataset_handler_train.update_model_dir(self.flags.model_dir);
+            self.dataset_handler_eval.update_model_dir(self.flags.model_dir);
+            self.dataset_handler_test.update_model_dir(self.flags.model_dir);
+
 
     def _input_fn_train(self):
         dataset = self.dataset_handler_train.readDatasetTF();
@@ -103,8 +115,8 @@ class NeuralNetModel():
         r = estimator.export_savedmodel(self.flags.export_dir, example_input_fn)
 
     def _getModelEstimator(self):
+        self._setModelDir();
         if self.model is None:
-            self._setModelDir();
             self.flags.export_dir = os.path.join(self.flags.model_dir, 'export_model');
             if self.mode == 'train':
                 # Clean up the model directory if present
@@ -131,6 +143,14 @@ class NeuralNetModel():
             dataset_maker = NeuralNetDatasetMaker('test', self.flags.model_dir, self.dataset_options_test);
             dataset_maker.createDatasets();
 
+    def removeDatasets(self):
+        if self.mode == 'test':
+            dataset_maker = NeuralNetDatasetMaker('test', self.flags.model_dir, self.dataset_options_test);
+            dataset_maker.removeDatasets();
+        else:
+            print('removing datasets is only possible in test mode...exit')
+            sys.exit()
+
     def train(self):
 
         self.createDatasets();
@@ -138,13 +158,8 @@ class NeuralNetModel():
         if self.model is None:
             self._getModelEstimator();
 
-        estimator = self.model.getEstimator();
 
-        # def train_input_fn():
-        #     return self.input_fn(self.flags.epochs_between_evals, True, self.flags.batch_size, 'train')
-        #
-        # def eval_input_fn():
-        #     return self.input_fn(1, False, self.flags.batch_size, 'eval')
+        estimator = self.model.getEstimator();
 
         run_params = {
             'batch_size': self.flags.batch_size,
@@ -183,12 +198,13 @@ class NeuralNetModel():
                 self.export_model()
 
     def predict(self):
-        self.createDatasets();
-
         if self.model is None:
             self._getModelEstimator();
+
+        self.createDatasets();
         estimator = self.model.getEstimator();
         results = estimator.predict(input_fn=self._input_fn_test)
+        # self.removeDatasets();
         return results;
 
     def getModelDir(self):

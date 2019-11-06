@@ -204,6 +204,7 @@ class ResultsAnalyzer:
         if title_plot is not None:
             plt.suptitle(title_plot)
         plt.draw();
+        print(filename_plot)
         if filename_plot is not None:
             plt.savefig(filename_plot, format='png', bbox_inches='tight');
         plt.close();

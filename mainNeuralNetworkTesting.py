@@ -78,7 +78,7 @@ def define_flags():
     model_dir = os.path.join(DIRPROJECT, "patients_model")
     export_dir = os.path.join(model_dir, "export_model")
 
-    flags_core.set_defaults(data_dir=DIRPROJECT + 'data/',
+    flags_core.set_defaults(data_dir=os.path.join(DIRPROJECT, 'data'),
                             model_dir=model_dir,
                             export_dir=export_dir,
                             hidden_units=[60, 40, 40, 20],
@@ -113,7 +113,7 @@ def predict(flags_obj):
         'encoding':         'embedding',
         'newfeatures':      None,
         'featurereduction': None,
-        'filtering':        'EntlassBereich_SaO',
+        'filtering':        'EntlassBereich_Gyn',
         'balanced':         False,
         'resample':         False
     }
@@ -127,7 +127,7 @@ def predict(flags_obj):
         'encoding':         'embedding',
         'newfeatures':      None,
         'featurereduction': None,
-        'filtering':        'EntlassBereich_SaO',
+        'filtering':        'EntlassBereich_Gyn',
         'balanced':         False,
         'resample':         False
     }
@@ -158,13 +158,12 @@ def predict(flags_obj):
         trained_model = model_flags.model_dir.split('/')[-2];
     else:
         trained_model = model_flags.model_dir.split('/')[-1];
-    print(model_flags.model_dir)
-    print(trained_model)
 
     if trained_model.startswith('warmstart'):
         pretrained = 'pretrained';
     else:
         pretrained = None;
+
     print('warmstart: ' + str(trained_model.startswith('warmstart')))
     print('hidden units: ' + str(model_flags.hidden_units))
     dict_options_nn = {
@@ -185,8 +184,8 @@ def predict(flags_obj):
     test_auc = [];
     test_avgprecision = [];
     for k in range(0, num_runs):
-        results = nn.predict();
 
+        results = nn.predict();
         filename_data_testing = nn.getFilenameDatasetBalanced();
         df_testing_balanced = pd.read_csv(filename_data_testing);
 
@@ -196,6 +195,7 @@ def predict(flags_obj):
         print('get labels...: ' + str(filename_data_testing))
         labels = df_testing_balanced[dataset_options_testing.getEarlyReadmissionFlagname()].values;
         res = classifier_nn.setResults(predictions, labels)
+        results_all_runs_test.addResultsSingleRun(res);
 
         auc = res.getAUC();
         avgprecision = res.getAvgPrecision();
@@ -205,7 +205,7 @@ def predict(flags_obj):
         print('')
         test_auc.append(auc)
         test_avgprecision.append(avgprecision);
-        results_all_runs_test.addResultsSingleRun(res);
+
 
     print('')
     print('mean test auc: ' + str(np.mean(np.array(test_auc))))

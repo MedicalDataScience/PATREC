@@ -13,18 +13,19 @@ dirData = os.path.join(dirProject, 'data');
 dict_dataset_options = {
     'dir_data':                 dirData,
     'data_prefix':              'patrec',
-    'dataset':                  '20162017',
+    'dataset':                  '20122015',
     # 'subgroups':                ['DK'],
     'grouping':                 'verylightgrouping',
-    'encoding':                 'embedding',
-    'newfeatures':              None,
-    'featurereduction':         None
+    'encoding':                 'categorical',
+    'newfeatures':              {'names': constantsPATREC.NEW_FEATURES},
+    'featurereduction':         None,
+    'filtering':                None
 }
 
 options = DatasetOptions(dict_dataset_options);
 preproc = Preprocessor(options);
-# preproc.splitColumns();
-# preproc.clean()
+preproc.splitColumns();
+preproc.clean()
 preproc.group()
 preproc.createFeatureSet()
 preproc.encodeFeatures();
